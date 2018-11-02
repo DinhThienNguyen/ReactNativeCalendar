@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, Button, TouchableOpacity, Text, ToastAndroid, AppState } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, ToastAndroid, AppState, ScrollView } from 'react-native';
 import EventCard from '../components/EventCard'
 
 var SQLite = require('react-native-sqlite-storage');
@@ -55,21 +55,21 @@ export default class HomeScreen extends Component {
                 // Get rows with Web SQL Database spec compliance.
 
                 let len = results.rows.length;
-                ToastAndroid.show(`${len}`, ToastAndroid.SHORT);
+                //ToastAndroid.show(`${len}`, ToastAndroid.SHORT);
                 for (let i = 0; i < len; i++) {
                     let row = results.rows.item(i);
                     let event = {
-                        id: row.id,
-                        day: row.day,
-                        month: row.month,
-                        year: row.year,
-                        title: row.title,
-                        description: row.description
+                        eventId: row.id,
+                        eventColor: row.color_hexid,
+                        startTime: row.starttime,
+                        endTime: row.endtime,
+                        eventTitle: row.title,
+                        eventDescription: row.description
                     }
                     this.setState({
                         events: [...this.state.events, event]
                     })
-                    ToastAndroid.show(`${row.title}${row.description}`, ToastAndroid.SHORT);
+                    //ToastAndroid.show(`${row.title}${row.description}`, ToastAndroid.SHORT);
                 }
             });
         });
@@ -103,14 +103,16 @@ export default class HomeScreen extends Component {
         let eventCardList = this.state.events.map((item, key) => {
             return (
                 <View key={key}>
-                    <EventCard title={item.title} description={item.description}></EventCard>
+                    <EventCard navigation={this.props.navigation} eventId={item.eventId} eventColor={item.eventColor} startTime={item.startTime} endTime={item.endTime} eventTitle={item.eventTitle} eventDescription={item.eventDescription} cardColor={item.color_hexid}></EventCard>
                 </View>
             );
         })
         return (
-            <View style={styles.container}>
+            <View style={styles.container}>                
                 <View style={styles.eventListView}>
+                <ScrollView>
                     {eventCardList}
+                    </ScrollView>
                 </View>
                 <View style={styles.selectionBar}>
                     <TouchableOpacity
@@ -138,6 +140,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#F5FCFF',
     },
     eventListView: {
+        width: '100%',
         flex: 9,
     },
     selectionBar: {
