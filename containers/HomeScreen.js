@@ -5,8 +5,18 @@ import EventCard from '../components/EventCard'
 var SQLite = require('react-native-sqlite-storage');
 var db = SQLite.openDatabase({ name: 'calendarr.db', createFromLocation: '~calendar.db' }, this.openCB, this.errorCB);
 
-
 export default class HomeScreen extends Component {
+
+    constructor(props) {
+        super(props);
+        this.state = {
+            appState: AppState.currentState,
+            events: [],
+            isDaySelected: true,
+            isWeekSelected: false,
+            isMonthSelected: false,
+        };
+    }
 
     errorCB(err) {
         console.log("SQL Error: " + err);
@@ -18,14 +28,6 @@ export default class HomeScreen extends Component {
 
     openCB() {
         console.log("Database OPENED");
-    }
-
-    state = {
-        appState: AppState.currentState,
-        events: [],
-        isDaySelected: true,
-        isWeekSelected: false,
-        isMonthSelected: false,
     }
 
     componentDidMount() {
@@ -108,10 +110,10 @@ export default class HomeScreen extends Component {
             );
         })
         return (
-            <View style={styles.container}>                
+            <View style={styles.container}>
                 <View style={styles.eventListView}>
-                <ScrollView>
-                    {eventCardList}
+                    <ScrollView>
+                        {eventCardList}
                     </ScrollView>
                 </View>
                 <View style={styles.selectionBar}>

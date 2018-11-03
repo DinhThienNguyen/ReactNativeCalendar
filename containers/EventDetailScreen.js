@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, Alert, ScrollView, ToastAndroid } from 'react-native';
+import { StyleSheet, Text, View, Alert, ScrollView, ToastAndroid, Button } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'
 
 export default class EventDetailScreen extends Component {
@@ -56,7 +56,7 @@ export default class EventDetailScreen extends Component {
 
     isEventOnlyToday = (startTime, endTime) => {
         //ToastAndroid.show(this.getCurrentDateInMillis()+"", ToastAndroid.SHORT);
-        
+
         if ((startTime - this.getCurrentDateInMillis < 86400) && (endTime - startTime < 86400)) {
             //ToastAndroid.show('isEventOnlyToday: true', ToastAndroid.SHORT);
             return true;
@@ -83,6 +83,16 @@ export default class EventDetailScreen extends Component {
                     </View>
                 </View>
                 <View style={styles.detail}>
+                    <Button onPress={() => {
+                        this.props.navigation.navigate('EventEdit', {
+                            eventId: this.props.eventId,
+                            eventColor: this.props.eventColor,
+                            startTime: this.props.startTime,
+                            endTime: this.props.endTime,
+                            eventTitle: this.props.eventTitle,
+                            eventDescription: this.props.eventDescription
+                        });
+                    }}></Button>
                     <View style={{ flexDirection: 'row', marginTop: 20 }}>
                         <View style={styles.icon}>
                             <Icon name="md-time" size={30} />
