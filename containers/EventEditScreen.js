@@ -1,29 +1,28 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, TextInput, View, Alert, ScrollView, TouchableOpacity, ToastAndroid } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'
-import Dialog from 'react-native-popup-dialog';
+import Dialog, { DialogContent } from 'react-native-popup-dialog';
 
 var SQLite = require('react-native-sqlite-storage');
 var db = SQLite.openDatabase({ name: 'calendarr.db', createFromLocation: '~calendar.db' }, this.openCB, this.errorCB);
-
-export default class EventDetailScreen extends Component {
+export default class EventEditScreen extends Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            selectedEventColor: {},
+            selectedEventColor: {
+            },
             colors: [],
             colorPickerDialogVisible: false,
         };
 
+        //Lấy danh sách màu
         db.transaction((tx) => {
             tx.executeSql('SELECT * FROM event_color', [], (tx, results) => {
                 console.log("Query completed");
 
-                // Get rows with Web SQL Database spec compliance.
-
                 let len = results.rows.length;
-                //ToastAndroid.show(`${len}`, ToastAndroid.SHORT);
+                ToastAndroid.show(`${len}`, ToastAndroid.SHORT);
                 for (let i = 0; i < len; i++) {
                     let row = results.rows.item(i);
                     let color = {
@@ -34,8 +33,14 @@ export default class EventDetailScreen extends Component {
                     this.setState({
                         colors: [...this.state.colors, color]
                     })
-                    //ToastAndroid.show(`${row.title}${row.description}`, ToastAndroid.SHORT);
+                    //ToastAndroid.show(`${color.name}   ${color.hex}`, ToastAndroid.SHORT);
                 }
+
+                //Set màu hiện tại của sự kiện nếu được gọi từ EventDetailScreen thông qua navigation
+                const test = this.state.colors.find(element => element.hex === this.props.navigation.state.params.eventColor);
+                this.setState({
+                    selectedEventColor: test,
+                })
             });
         });
     }
@@ -103,25 +108,23 @@ export default class EventDetailScreen extends Component {
 
     render() {
         const { navigation } = this.props;
+        const eventId = navigation.getParam('eventId', '-1');
         const eventTitle = navigation.getParam('eventTitle', '');
         const startTime = navigation.getParam('startTime', '0');
         const endTime = navigation.getParam('endTime', '0');
         const eventDescription = navigation.getParam('eventDescription', '');
         const eventColor = navigation.getParam('eventColor', '#009ae4');
-        this.setState({
-            selectedEventColor = this.state.colors.find(function (element) { return element.hex === eventColor }),
-        })
 
         let colorList = this.state.colors.map((item, key) => {
             return (
                 <View key={key}>
-                    <TouchableOpacity onPress={() => { this.setState({selectedEventColor : item}) }}>
-                        <View style={{ flexDirection: 'row' }}>
-                            <View style={styles.icon}>
+                    <TouchableOpacity onPress={() => { this.setState({ selectedEventColor: item, colorPickerDialogVisible: false }) }}>
+                        <View style={{ flexDirection: 'row', padding: 10 }}>
+                            <View >
                                 <View style={{ height: 30, width: 30, backgroundColor: item.hex }}></View>
                             </View>
-                            <View style={{ flex: 8 }}>
-                                <Text>{item.name}</Text>
+                            <View style={{ paddingLeft: 10 }}>
+                                <Text style={{ fontSize: 24, color: 'black' }}>{item.name}</Text>
                             </View>
                         </View>
                     </TouchableOpacity>
@@ -130,8 +133,8 @@ export default class EventDetailScreen extends Component {
         })
         return (
             <View style={{ flex: 1 }}>
-                <View style={{ borderBottomColor: 'black', borderBottomWidth: 1, paddingBottom: 10 }}>
-                    <TextInput placeholder='Nhập tiêu đề'>{this.eventTitle == '' ? '' : this.eventTitle}</TextInput>
+                <View style={{ borderBottomColor: 'black', borderBottomWidth: 1, paddingBottom: 10, paddingLeft: 10 }}>
+                    <TextInput style={styles.titleText} placeholder='Nhập tiêu đề'>{eventTitle == '' ? '' : eventTitle}</TextInput>
                 </View>
 
                 <View style={{ flexDirection: 'row', marginTop: 20 }}>
@@ -153,16 +156,17 @@ export default class EventDetailScreen extends Component {
 
                 <View style={{ flexDirection: 'row', marginTop: 20 }}>
                     <View style={styles.icon}>
-                        <View style={{ width: 20, height: 20, backgroundColor: this.eventColor }}></View>
+                        <View style={{ width: 20, height: 20, backgroundColor: this.state.selectedEventColor.hex }}></View>
                     </View>
                     <View style={{ flex: 8, justifyContent: 'center' }}>
-                        <TouchableOpacity>
-                            <Text></Text>
+                        <TouchableOpacity onPress={() => { this.setState({ colorPickerDialogVisible: true }) }}>
+                            <Text style={styles.detailText}>{this.state.selectedEventColor.name}</Text>
                         </TouchableOpacity>
-                        <Dialog visible={this.state.colorPickerDialogVisible}>
-                            <View>
+                        <Dialog visible={this.state.colorPickerDialogVisible}
+                            onTouchOutside={() => { this.setState({ colorPickerDialogVisible: false }) }}>
+                            <DialogContent>
                                 {colorList}
-                            </View>
+                            </DialogContent>
                         </Dialog>
                     </View>
                 </View>
@@ -173,7 +177,7 @@ export default class EventDetailScreen extends Component {
                     </View>
                     <View style={{ flex: 8, justifyContent: 'center' }}>
                         <ScrollView>
-                            <TextInput multiline={true} placeholder='Nhập ghi chú'>{this.eventDescription == '' ? '' : this.eventDescription}</TextInput>
+                            <TextInput style={styles.detailText} multiline={true} placeholder='Nhập ghi chú'>{eventDescription == '' ? '' : eventDescription}</TextInput>
                         </ScrollView>
                     </View>
                 </View>
@@ -186,6 +190,10 @@ const styles = StyleSheet.create({
     title: {
         flex: 3,
         justifyContent: 'flex-end'
+    },
+    titleText: {
+        fontSize: 28,
+        color: 'black'
     },
     detail: {
         flex: 7,

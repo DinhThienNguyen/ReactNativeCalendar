@@ -101,7 +101,7 @@ export default class HomeScreen extends Component {
         })
     }
 
-    render() {
+    render() {        
         let eventCardList = this.state.events.map((item, key) => {
             return (
                 <View key={key}>

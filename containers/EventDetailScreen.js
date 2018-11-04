@@ -67,6 +67,7 @@ export default class EventDetailScreen extends Component {
 
     render() {
         const { navigation } = this.props;
+        const eventId = navigation.getParam('eventId', '-1');
         const eventTitle = navigation.getParam('eventTitle', 'Không tiêu đề');
         const startTime = navigation.getParam('startTime', '0');
         const endTime = navigation.getParam('endTime', '0');
@@ -83,14 +84,14 @@ export default class EventDetailScreen extends Component {
                     </View>
                 </View>
                 <View style={styles.detail}>
-                    <Button onPress={() => {
+                    <Button title='edit' onPress={() => {
                         this.props.navigation.navigate('EventEdit', {
-                            eventId: this.props.eventId,
-                            eventColor: this.props.eventColor,
-                            startTime: this.props.startTime,
-                            endTime: this.props.endTime,
-                            eventTitle: this.props.eventTitle,
-                            eventDescription: this.props.eventDescription
+                            eventId: eventId,
+                            eventColor: eventColor,
+                            startTime: startTime,
+                            endTime: endTime,
+                            eventTitle: eventTitle,
+                            eventDescription: eventDescription
                         });
                     }}></Button>
                     <View style={{ flexDirection: 'row', marginTop: 20 }}>

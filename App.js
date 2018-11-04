@@ -4,7 +4,7 @@ import { createStackNavigator } from 'react-navigation'
 import HomeScreen from './containers/HomeScreen'
 import EventDetailScreen from './containers/EventDetailScreen';
 import EventCard from './components/EventCard'
-import EventEditScreen from './components/EventEditScreen'
+import EventEditScreen from './containers/EventEditScreen'
 // import DateTimePickerTextComponent from './components/DateTimePickerTextComponent/DateTimePickerTextComponent.js';
 
 export default class App extends Component {
