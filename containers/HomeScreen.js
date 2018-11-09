@@ -51,7 +51,7 @@ export default class HomeScreen extends Component {
         });
 
         db.transaction((tx) => {
-            tx.executeSql('SELECT * FROM event', [], (tx, results) => {
+            tx.executeSql('SELECT * FROM event where id = ?', [1], (tx, results) => {
                 console.log("Query completed");
 
                 // Get rows with Web SQL Database spec compliance.
@@ -105,7 +105,15 @@ export default class HomeScreen extends Component {
         let eventCardList = this.state.events.map((item, key) => {
             return (
                 <View key={key}>
-                    <EventCard navigation={this.props.navigation} eventId={item.eventId} eventColor={item.eventColor} startTime={item.startTime} endTime={item.endTime} eventTitle={item.eventTitle} eventDescription={item.eventDescription} cardColor={item.color_hexid}></EventCard>
+                    <EventCard 
+                    navigation={this.props.navigation} 
+                    eventId={item.eventId} 
+                    eventColor={item.eventColor} 
+                    startTime={item.startTime} 
+                    endTime={item.endTime} 
+                    eventTitle={item.eventTitle} 
+                    eventDescription={item.eventDescription} 
+                    cardColor={item.color_hexid}></EventCard>
                 </View>
             );
         })

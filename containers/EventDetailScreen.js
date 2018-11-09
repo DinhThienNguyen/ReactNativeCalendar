@@ -4,6 +4,10 @@ import Icon from 'react-native-vector-icons/Ionicons'
 
 export default class EventDetailScreen extends Component {
 
+    static navigationOptions = {
+        header: null
+    }
+
     alertDetail = () => {
         Alert.alert(this.props.title);
     }
@@ -73,6 +77,7 @@ export default class EventDetailScreen extends Component {
         const endTime = navigation.getParam('endTime', '0');
         const eventDescription = navigation.getParam('eventDescription', '0');
         const eventColor = navigation.getParam('eventColor', 'Không tiêu đề');
+        ToastAndroid.show(eventId + '', ToastAndroid.SHORT);
         return (
             <View style={{ flex: 1 }}>
                 <View style={{ flex: 3, justifyContent: 'flex-end', backgroundColor: eventColor }}>
@@ -84,14 +89,15 @@ export default class EventDetailScreen extends Component {
                     </View>
                 </View>
                 <View style={styles.detail}>
-                    <Button title='edit' onPress={() => {
+                    <Button title='Chỉnh sửa' onPress={() => {
                         this.props.navigation.navigate('EventEdit', {
                             eventId: eventId,
                             eventColor: eventColor,
                             startTime: startTime,
                             endTime: endTime,
                             eventTitle: eventTitle,
-                            eventDescription: eventDescription
+                            eventDescription: eventDescription,
+                            screenTitle: 'Chỉnh sửa'
                         });
                     }}></Button>
                     <View style={{ flexDirection: 'row', marginTop: 20 }}>

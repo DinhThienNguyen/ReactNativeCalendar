@@ -1,19 +1,57 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, TextInput, View, Alert, ScrollView, TouchableOpacity, ToastAndroid } from 'react-native';
+import { StyleSheet, Text, TextInput, View, Alert, ScrollView, TouchableOpacity, ToastAndroid, Button } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'
 import Dialog, { DialogContent } from 'react-native-popup-dialog';
+import DatePicker from 'react-native-datepicker'
+import moment from 'moment';
 
 var SQLite = require('react-native-sqlite-storage');
 var db = SQLite.openDatabase({ name: 'calendarr.db', createFromLocation: '~calendar.db' }, this.openCB, this.errorCB);
 export default class EventEditScreen extends Component {
 
+    static navigationOptions = ({ navigation }) => {    
+        return {
+            title: navigation.getParam('screenTitle', 'Thêm mới'),
+            headerRight: (
+                <Button
+                    onPress={() => {                        
+                        let newEvent = {
+                            id: navigation.getParam('eventId', -1),
+                            hex: this.state.selectedEventColor.hex,
+                            startDate: this.state.eventStartDate,
+                            endDate: this.state.eventEndDate,
+                            title: this.state.eventTitle,
+                            description: this.state.eventDescription
+                        }
+                        if (newEvent.id == -1) {
+                            addNewEvent(newEvent);
+                        } else {
+                            udpateEvent(newEvent);
+                        }
+
+                    }}
+                    title="Lưu"
+                    color="#000"
+                />
+            ),
+        };
+    };
+
     constructor(props) {
         super(props);
+
+        let startDate = new Date(this.props.navigation.state.params.startTime * 1000);
+        let endDate = new Date(this.props.navigation.state.params.endTime * 1000);        
+
         this.state = {
             selectedEventColor: {
             },
             colors: [],
-            colorPickerDialogVisible: false,
+            colorPickerDialogVisible: false,            
+            eventStartDate: startDate,
+            eventEndDate: endDate,
+            eventTitle: "",
+            eventDescription: ""
         };
 
         //Lấy danh sách màu
@@ -22,7 +60,7 @@ export default class EventEditScreen extends Component {
                 console.log("Query completed");
 
                 let len = results.rows.length;
-                ToastAndroid.show(`${len}`, ToastAndroid.SHORT);
+                // ToastAndroid.show(`${len}`, ToastAndroid.SHORT);
                 for (let i = 0; i < len; i++) {
                     let row = results.rows.item(i);
                     let color = {
@@ -40,13 +78,43 @@ export default class EventEditScreen extends Component {
                 const test = this.state.colors.find(element => element.hex === this.props.navigation.state.params.eventColor);
                 this.setState({
                     selectedEventColor: test,
+
                 })
             });
         });
     }
 
-    alertDetail = () => {
-        Alert.alert(this.props.title);
+    addNewEvent = () => {
+        const navigation = this.props;
+        db.transaction((tx) => {
+            tx.executeSql('INSERT INTO event(color_hexid, starttime, endtime, title, description) values(?,?,?,?,?)',
+                [
+                    this.state.selectedEventColor.hex,
+                    moment(this.state.eventStartDate, "dddd, DD/MM/YYYY, HH:mm").unix(),
+                    moment(this.state.eventEndDate, "dddd, DD/MM/YYYY, HH:mm").unix(),
+                    this.state.eventTitle,
+                    this.state.eventDescription,
+                ], (tx, results) => {
+                    console.log("Query completed");
+                });
+        });
+    }
+
+    udpateEvent = () => {
+        const navigation = this.props;
+        db.transaction((tx) => {
+            tx.executeSql('UPDATE event set color_hexid = ?, starttime = ?, endtime = ?, title = ?, description = ? WHERE id = ?',
+                [
+                    this.state.selectedEventColor.hex,
+                    moment(this.state.eventStartDate, "dddd, DD/MM/YYYY, HH:mm").unix(),
+                    moment(this.state.eventEndDate, "dddd, DD/MM/YYYY, HH:mm").unix(),
+                    this.state.eventTitle,
+                    this.state.eventDescription,
+                    navigation.getParam('eventId', -1),
+                ], (tx, results) => {
+                    console.log("Query completed");
+                });
+        });
     }
 
     getCurrentDateInMillis = () => {
@@ -107,13 +175,11 @@ export default class EventEditScreen extends Component {
     }
 
     render() {
+
         const { navigation } = this.props;
-        const eventId = navigation.getParam('eventId', '-1');
         const eventTitle = navigation.getParam('eventTitle', '');
-        const startTime = navigation.getParam('startTime', '0');
-        const endTime = navigation.getParam('endTime', '0');
         const eventDescription = navigation.getParam('eventDescription', '');
-        const eventColor = navigation.getParam('eventColor', '#009ae4');
+
 
         let colorList = this.state.colors.map((item, key) => {
             return (
@@ -132,9 +198,15 @@ export default class EventEditScreen extends Component {
             );
         })
         return (
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, backgroundColor: 'white' }}>
+                <Button title='test' onPress={() => { ToastAndroid.show(this.state.eventId + " ", ToastAndroid.SHORT) }}></Button>
                 <View style={{ borderBottomColor: 'black', borderBottomWidth: 1, paddingBottom: 10, paddingLeft: 10 }}>
-                    <TextInput style={styles.titleText} placeholder='Nhập tiêu đề'>{eventTitle == '' ? '' : eventTitle}</TextInput>
+                    <TextInput
+                        style={styles.titleText}
+                        placeholder='Nhập tiêu đề'
+                        onChangeText={(text) => { this.setState({ eventTitle: text }) }}>
+                        {eventTitle == '' ? '' : eventTitle}
+                    </TextInput>
                 </View>
 
                 <View style={{ flexDirection: 'row', marginTop: 20 }}>
@@ -142,7 +214,46 @@ export default class EventEditScreen extends Component {
                         <Icon name="md-time" size={30} />
                     </View>
                     <View style={{ flex: 8 }}>
-
+                        <DatePicker
+                            style={{ width: '100%', backgroundColor: '#fff' }}
+                            showIcon={false}
+                            customStyles={{
+                                dateText: {
+                                    fontSize: 22
+                                },
+                                dateInput: { borderWidth: 0 }
+                            }}
+                            is24Hour={true}
+                            date={this.state.eventStartDate}
+                            mode="datetime"
+                            format="dddd, DD/MM/YYYY, HH:mm"
+                            confirmBtnText="OK"
+                            cancelBtnText="Hủy"
+                            onDateChange={(date) => {
+                                this.setState({ eventStartDate: date });
+                                // ToastAndroid.show(this.state.eventStartDate+"", ToastAndroid.SHORT);
+                            }}
+                        />
+                        <DatePicker
+                            style={{ width: '100%', backgroundColor: '#fff' }}
+                            showIcon={false}
+                            customStyles={{
+                                dateText: {
+                                    fontSize: 22
+                                },
+                                dateInput: { borderWidth: 0 }
+                            }}
+                            is24Hour={true}
+                            date={this.state.eventEndDate}
+                            mode="datetime"
+                            format="dddd, DD/MM/YYYY, HH:mm"
+                            confirmBtnText="OK"
+                            cancelBtnText="Hủy"
+                            onDateChange={(date) => {
+                                this.setState({ eventEndDate: date });
+                                ToastAndroid.show(this.state.eventEndDate, ToastAndroid.SHORT)
+                            }}
+                        />
                     </View>
                 </View>
 
@@ -177,7 +288,13 @@ export default class EventEditScreen extends Component {
                     </View>
                     <View style={{ flex: 8, justifyContent: 'center' }}>
                         <ScrollView>
-                            <TextInput style={styles.detailText} multiline={true} placeholder='Nhập ghi chú'>{eventDescription == '' ? '' : eventDescription}</TextInput>
+                            <TextInput
+                                style={styles.detailText}
+                                multiline={true}
+                                placeholder='Nhập ghi chú'
+                                onChangeText={(text) => { this.setState({ eventDescription: text }) }}>
+                                {eventDescription == '' ? '' : eventDescription}
+                            </TextInput>
                         </ScrollView>
                     </View>
                 </View>

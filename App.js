@@ -26,8 +26,4 @@ const AppStackNavigator = createStackNavigator({
   EventDetail: EventDetailScreen,
   EventCard: EventCard,
   EventEdit: EventEditScreen
-}, {
-      navigationOptions: {
-          headerTitle: 'Calendar',
-      }
-  })
+})
