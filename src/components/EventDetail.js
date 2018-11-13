@@ -40,6 +40,7 @@ convertMillisToDateString = (millis) => {
     return dayInWeek + ", " + converter.getDate() + "/" + (converter.getMonth() + 1) + "/" + converter.getFullYear() + ", " + converter.getHours() + ":" + converter.getMinutes();
 }
 
+
 convertMillisToHour = (millis) => {
     return new Date(millis * 1000).getHours;
 }
