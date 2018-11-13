@@ -5,6 +5,7 @@ import EventCard from '../components/EventCard'
 var SQLite = require('react-native-sqlite-storage');
 var db = SQLite.openDatabase({ name: 'calendarr.db', createFromLocation: '~calendar.db' }, this.openCB, this.errorCB);
 
+
 export default class HomeScreen extends Component {
 
     constructor(props) {
@@ -18,6 +19,10 @@ export default class HomeScreen extends Component {
         };
     }
 
+    // componentDidMount() {
+    //     this.refreshEventList()
+    // }
+    
     errorCB(err) {
         console.log("SQL Error: " + err);
     }
