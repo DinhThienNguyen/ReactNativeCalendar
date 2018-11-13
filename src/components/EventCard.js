@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, Alert, Button, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, Alert, Button, TouchableOpacity, ToastAndroid } from 'react-native';
+import { connect } from 'react-redux'
 
-export default class EventCard extends Component {
+class EventCard extends Component {
 
     alertDetail = () => {
         Alert.alert(this.props.title);
@@ -58,18 +59,30 @@ export default class EventCard extends Component {
         return false;
     };
 
+    updateCurrentSelectedEvent = () => {
+        //redux store 
+        let action = {
+            id: this.props.eventId,
+            hex: this.props.eventColor,
+            startTime: this.props.startTime,
+            endTime: this.props.endTime,
+            title: this.props.eventTitle,
+            description: this.props.eventDescription
+        };
+        ToastAndroid.show(
+            action.id + " " + action.hex + " " + action.startTime + " " + action.endTime + " " + action.title + " " + action.description, ToastAndroid.SHORT
+        );
+
+    
+        this.props.dispatch({ type: 'UPDATE_CURRENT', ...action });
+    }
+
     render() {
         return (
             <View style={[styles.card, { backgroundColor: this.props.eventColor }]}>
                 <TouchableOpacity onPress={() => {
-                    this.props.navigation.navigate('EventDetail', {
-                        eventId: this.props.eventId,
-                        eventColor: this.props.eventColor,
-                        startTime: this.props.startTime,
-                        endTime: this.props.endTime,
-                        eventTitle: this.props.eventTitle,
-                        eventDescription: this.props.eventDescription
-                    });
+                    this.updateCurrentSelectedEvent();
+                    this.props.navigation.navigate('EventDetail');
                 }} >
 
                     <Text style={styles.title}>{this.props.eventTitle}</Text>
@@ -89,6 +102,8 @@ export default class EventCard extends Component {
         );
     }
 }
+
+export default connect()(EventCard);
 
 const styles = StyleSheet.create({
     title: {

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, ToastAndroid, AppState, ScrollView } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Button, ToastAndroid, AppState, ScrollView } from 'react-native';
 import EventCard from '../components/EventCard'
 
 var SQLite = require('react-native-sqlite-storage');
@@ -51,7 +51,7 @@ export default class HomeScreen extends Component {
         });
 
         db.transaction((tx) => {
-            tx.executeSql('SELECT * FROM event where id = ?', [1], (tx, results) => {
+            tx.executeSql('SELECT * FROM event', [], (tx, results) => {
                 console.log("Query completed");
 
                 // Get rows with Web SQL Database spec compliance.
@@ -101,24 +101,27 @@ export default class HomeScreen extends Component {
         })
     }
 
-    render() {        
+    render() {
         let eventCardList = this.state.events.map((item, key) => {
             return (
                 <View key={key}>
-                    <EventCard 
-                    navigation={this.props.navigation} 
-                    eventId={item.eventId} 
-                    eventColor={item.eventColor} 
-                    startTime={item.startTime} 
-                    endTime={item.endTime} 
-                    eventTitle={item.eventTitle} 
-                    eventDescription={item.eventDescription} 
-                    cardColor={item.color_hexid}></EventCard>
+                    <EventCard
+                        navigation={this.props.navigation}
+                        eventId={item.eventId}
+                        eventColor={item.eventColor}
+                        startTime={item.startTime}
+                        endTime={item.endTime}
+                        eventTitle={item.eventTitle}
+                        eventDescription={item.eventDescription}
+                        cardColor={item.color_hexid}></EventCard>
                 </View>
             );
         })
         return (
             <View style={styles.container}>
+                <Button title='test' onPress={() => {
+                    this.props.navigation.navigate('EventDetail')
+                }}></Button>
                 <View style={styles.eventListView}>
                     <ScrollView>
                         {eventCardList}

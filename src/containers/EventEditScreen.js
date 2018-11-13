@@ -9,24 +9,20 @@ var SQLite = require('react-native-sqlite-storage');
 var db = SQLite.openDatabase({ name: 'calendarr.db', createFromLocation: '~calendar.db' }, this.openCB, this.errorCB);
 export default class EventEditScreen extends Component {
 
-    static navigationOptions = ({ navigation }) => {    
+    static navigationOptions = ({ navigation }) => {
+        const { params = {} } = navigation.state;
         return {
             title: navigation.getParam('screenTitle', 'Thêm mới'),
             headerRight: (
                 <Button
-                    onPress={() => {                        
-                        let newEvent = {
-                            id: navigation.getParam('eventId', -1),
-                            hex: this.state.selectedEventColor.hex,
-                            startDate: this.state.eventStartDate,
-                            endDate: this.state.eventEndDate,
-                            title: this.state.eventTitle,
-                            description: this.state.eventDescription
-                        }
-                        if (newEvent.id == -1) {
-                            addNewEvent(newEvent);
+                    onPress={() => {
+                        // ToastAndroid.show(params.eventId + "", ToastAndroid.SHORT);
+                        if (params.eventId == -1) {
+                            ToastAndroid.show("add", ToastAndroid.SHORT);
+                            // params.addNewEvent;
                         } else {
-                            udpateEvent(newEvent);
+                            // ToastAndroid.show("update",ToastAndroid.SHORT);
+                            params.updateEvent();
                         }
 
                     }}
@@ -41,13 +37,22 @@ export default class EventEditScreen extends Component {
         super(props);
 
         let startDate = new Date(this.props.navigation.state.params.startTime * 1000);
-        let endDate = new Date(this.props.navigation.state.params.endTime * 1000);        
+        let endDate = new Date(this.props.navigation.state.params.endTime * 1000);
+        let id = this.props.navigation.state.params.eventId;
+        // let id = this.props.navigation.state.params.eventId;
+        this.props.navigation.setParams({
+            eventId: id,
+            addNewEvent: this._addNewEvent,
+            updateEvent: this._updateEvent,
+        });
+        // ToastAndroid.show(id + "", ToastAndroid.SHORT);
 
         this.state = {
             selectedEventColor: {
             },
             colors: [],
-            colorPickerDialogVisible: false,            
+            colorPickerDialogVisible: false,
+            eventId: id,
             eventStartDate: startDate,
             eventEndDate: endDate,
             eventTitle: "",
@@ -84,7 +89,7 @@ export default class EventEditScreen extends Component {
         });
     }
 
-    addNewEvent = () => {
+    _addNewEvent = () => {
         const navigation = this.props;
         db.transaction((tx) => {
             tx.executeSql('INSERT INTO event(color_hexid, starttime, endtime, title, description) values(?,?,?,?,?)',
@@ -100,8 +105,19 @@ export default class EventEditScreen extends Component {
         });
     }
 
-    udpateEvent = () => {
-        const navigation = this.props;
+    _updateEvent = () => {
+        let test = 'UPDATE event set color_hexid = '
+            + this.state.selectedEventColor.hex +
+            ', starttime = '
+            + moment(this.state.eventStartDate, "dddd, DD/MM/YYYY, HH:mm").unix() +
+            ', endtime = '
+            + moment(this.state.eventEndDate, "dddd, DD/MM/YYYY, HH:mm").unix() +
+            ', title = '
+            + this.state.eventTitle +
+            ', description = '
+            + this.state.eventDescription +
+            ' WHERE id = ' + this.state.eventId;
+        ToastAndroid.show(test + " ", ToastAndroid.SHORT);
         db.transaction((tx) => {
             tx.executeSql('UPDATE event set color_hexid = ?, starttime = ?, endtime = ?, title = ?, description = ? WHERE id = ?',
                 [
@@ -110,12 +126,21 @@ export default class EventEditScreen extends Component {
                     moment(this.state.eventEndDate, "dddd, DD/MM/YYYY, HH:mm").unix(),
                     this.state.eventTitle,
                     this.state.eventDescription,
-                    navigation.getParam('eventId', -1),
-                ], (tx, results) => {
-                    console.log("Query completed");
+                    this.state.eventId,
+                ], (tx, results) => {                                       
                 });
         });
     }
+
+    componentDidMount() {
+        this.props.navigation.setParams({
+            addNewEvent: this._addNewEvent,
+            updateEvent: this._updateEvent,
+            eventId: this.state.eventId
+        })
+    }
+
+
 
     getCurrentDateInMillis = () => {
         let converter = new Date();

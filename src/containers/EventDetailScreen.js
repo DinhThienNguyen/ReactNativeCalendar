@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, View, Alert, ScrollView, ToastAndroid, Button } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'
+import { connect } from "react-redux";
 
-export default class EventDetailScreen extends Component {
+class EventDetailScreen extends Component {
 
     static navigationOptions = {
         header: null
@@ -69,26 +70,46 @@ export default class EventDetailScreen extends Component {
         return false;
     }
 
+    updateCurrentSelectedEvent = () => {
+        //redux store 
+        let action = {
+            id: 1,
+            hex: '#009ae4',
+            startTime: 1540227600,
+            endTime: 1540227600,
+            title: 'test',
+            description: 'test'
+        };
+        ToastAndroid.show(
+            action.id + " " + action.hex + " " + action.startTime + " " + action.endTime + " " + action.title + " " + action.description, ToastAndroid.SHORT
+        );
+        this.props.dispatch({ type: 'UPDATE_CURRENT', action });
+    }
+
     render() {
-        const { navigation } = this.props;
-        const eventId = navigation.getParam('eventId', '-1');
-        const eventTitle = navigation.getParam('eventTitle', 'Không tiêu đề');
-        const startTime = navigation.getParam('startTime', '0');
-        const endTime = navigation.getParam('endTime', '0');
-        const eventDescription = navigation.getParam('eventDescription', '0');
-        const eventColor = navigation.getParam('eventColor', 'Không tiêu đề');
-        ToastAndroid.show(eventId + '', ToastAndroid.SHORT);
+        // const { navigation } = this.props;
+        // const eventId = navigation.getParam('eventId', '-1');
+        // const eventTitle = navigation.getParam('eventTitle', 'Không tiêu đề');
+        // const startTime = navigation.getParam('startTime', '0');
+        // const endTime = navigation.getParam('endTime', '0');
+        // const eventDescription = navigation.getParam('eventDescription', '0');
+        // const eventColor = navigation.getParam('eventColor', 'Không tiêu đề');
+        // ToastAndroid.show(eventId + '', ToastAndroid.SHORT);
         return (
             <View style={{ flex: 1 }}>
-                <View style={{ flex: 3, justifyContent: 'flex-end', backgroundColor: eventColor }}>
+                <View style={{ flex: 3, justifyContent: 'flex-end', backgroundColor: this.props.eventColor }}>
                     <View style={{ flexDirection: 'row' }}>
                         <View style={{ flex: 2 }}></View>
                         <View style={{ flex: 8 }}>
-                            <Text style={{ fontSize: 28, color: '#ffffff', marginBottom: 20 }}>{eventTitle}</Text>
+                            <Text style={{ fontSize: 28, color: '#ffffff', marginBottom: 20 }}>{this.props.eventTitle}</Text>
                         </View>
                     </View>
                 </View>
                 <View style={styles.detail}>
+                    <Button title='test' onPress={() => {
+                        this.updateCurrentSelectedEvent();
+                    }}>
+                    </Button>
                     <Button title='Chỉnh sửa' onPress={() => {
                         this.props.navigation.navigate('EventEdit', {
                             eventId: eventId,
@@ -106,15 +127,15 @@ export default class EventDetailScreen extends Component {
                         </View>
                         <View style={{ flex: 8 }}>
                             <Text style={styles.detailText}>
-                                {this.isEventOnlyToday(startTime, endTime) ? 'Hôm nay' : this.convertMillisToDateString(startTime) + " -"}
+                                {this.isEventOnlyToday(this.props.startTime, this.props.endTime) ? 'Hôm nay' : this.convertMillisToDateString(this.props.startTime) + " -"}
                             </Text>
                             <Text style={styles.detailText}>
-                                {this.isEventOnlyToday(startTime, endTime) ?
-                                    this.convertMillisToHour(startTime) + ":" + this.convertMillisToMinute(startTime)
+                                {this.isEventOnlyToday(this.props.startTime, this.props.endTime) ?
+                                    this.convertMillisToHour(this.props.startTime) + ":" + this.convertMillisToMinute(this.props.startTime)
                                     + " - " +
-                                    this.convertMillisToHour(endTime) + ":" + this.convertMillisToMinute(endTime)
+                                    this.convertMillisToHour(this.props.endTime) + ":" + this.convertMillisToMinute(this.props.endTime)
                                     :
-                                    this.convertMillisToDateString(endTime)}
+                                    this.convertMillisToDateString(this.props.endTime)}
                             </Text>
                         </View>
                     </View>
@@ -134,7 +155,7 @@ export default class EventDetailScreen extends Component {
                         </View>
                         <View style={{ flex: 8, justifyContent: 'center' }}>
                             <ScrollView>
-                                <Text style={styles.detailText}>{eventDescription}</Text>
+                                <Text style={styles.detailText}>{this.props.eventDescription}</Text>
                             </ScrollView>
                         </View>
                     </View>
@@ -143,6 +164,19 @@ export default class EventDetailScreen extends Component {
         );
     }
 }
+
+function mapStateToProps(state) {
+    return {
+        eventId: state.currentEvent.id,
+        eventColor: state.currentEvent.hex,
+        startTime: state.currentEvent.startTime,
+        endTime: state.currentEvent.endTime,
+        eventTitle: state.currentEvent.title,
+        eventDescription: state.currentEvent.description
+    }
+}
+
+export default connect(mapStateToProps)(EventDetailScreen);
 
 const styles = StyleSheet.create({
     title: {
