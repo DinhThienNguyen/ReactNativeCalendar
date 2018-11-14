@@ -18,10 +18,6 @@ export default class HomeScreen extends Component {
             isMonthSelected: false,
         };
     }
-
-    // componentDidMount() {
-    //     this.refreshEventList()
-    // }
     
     errorCB(err) {
         console.log("SQL Error: " + err);
