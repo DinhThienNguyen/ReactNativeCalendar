@@ -22,11 +22,15 @@ class HomeScreen extends Component {
         };
         this.refreshEventColorList();
     }
+<<<<<<< HEAD
 
     // componentDidMount() {
     //     this.refreshEventList()
     // }
 
+=======
+    
+>>>>>>> 48ed9e5392aa6a4ccbeb9cbe1ad10b033115c3e4
     errorCB(err) {
         console.log("SQL Error: " + err);
     }
