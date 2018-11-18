@@ -12,12 +12,12 @@ const currentSelectedEvent = (state = initialState, action) => {
         case 'UPDATE_CURRENT':
             console.log(action);
             return {
-                id: action.id,
-                hex: action.hex,
+                eventId: action.eventId,
+                eventColor: action.eventColor,
                 startTime: action.startTime,
                 endTime: action.endTime,
-                title: action.title,
-                description: action.description
+                eventTitle: action.eventTitle,
+                eventDescription: action.eventDescription
             }
         default:
             return state

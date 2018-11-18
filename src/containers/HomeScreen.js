@@ -1,28 +1,32 @@
 import React, { Component } from 'react';
 import { StyleSheet, View, TouchableOpacity, Text, Button, ToastAndroid, AppState, ScrollView } from 'react-native';
 import EventCard from '../components/EventCard'
+import { connect } from "react-redux";
 
 var SQLite = require('react-native-sqlite-storage');
 var db = SQLite.openDatabase({ name: 'calendarr.db', createFromLocation: '~calendar.db' }, this.openCB, this.errorCB);
 
+var PushNotification = require('react-native-push-notification');
 
-export default class HomeScreen extends Component {
+class HomeScreen extends Component {
 
     constructor(props) {
         super(props);
+        ToastAndroid.show("Constructed", ToastAndroid.SHORT);
         this.state = {
             appState: AppState.currentState,
-            events: [],
+            events: [],            
             isDaySelected: true,
             isWeekSelected: false,
             isMonthSelected: false,
         };
+        this.refreshEventColorList();
     }
 
     // componentDidMount() {
     //     this.refreshEventList()
     // }
-    
+
     errorCB(err) {
         console.log("SQL Error: " + err);
     }
@@ -48,6 +52,29 @@ export default class HomeScreen extends Component {
             this.refreshEventList()
         }
         this.setState({ appState: nextAppState });
+    }
+
+    refreshEventColorList = () => {
+        let colors = [];
+        db.transaction((tx) => {
+            tx.executeSql('SELECT * FROM event_color', [], (tx, results) => {
+                console.log("Query completed");
+
+                let len = results.rows.length;
+                // ToastAndroid.show(`${len}`, ToastAndroid.SHORT);
+                for (let i = 0; i < len; i++) {
+                    let row = results.rows.item(i);
+                    let color = {
+                        id: row.id,
+                        name: row.name,
+                        hex: row.hex,
+                    }
+                    colors = [...colors, color];                    
+                    //ToastAndroid.show(`${color.name}   ${color.hex}`, ToastAndroid.SHORT);
+                }                                
+            });
+        });
+        this.props.dispatch({ type: 'UPDATE_COLOR_LIST', ...colors });
     }
 
     refreshEventList = (startDate, endDate) => {
@@ -122,6 +149,11 @@ export default class HomeScreen extends Component {
                 </View>
             );
         })
+        // PushNotification.localNotificationSchedule({
+        //     //... You can use all the options from localNotifications
+        //     message: "My Notification Message", // (required)
+        //     date: new Date(Date.now() + (20 * 1000)) // in 60 secs
+        //   });
         return (
             <View style={styles.container}>
                 <Button title='test' onPress={() => {
@@ -149,6 +181,8 @@ export default class HomeScreen extends Component {
         );
     }
 }
+
+export default connect()(HomeScreen);
 
 const styles = StyleSheet.create({
     container: {

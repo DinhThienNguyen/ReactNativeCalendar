@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, View, Alert, Button, TouchableOpacity, ToastAndroid } from 'react-native';
 import { connect } from 'react-redux'
+import updateCurrentSelectedEvent from '../actions'
 
 class EventCard extends Component {
 
@@ -62,18 +63,17 @@ class EventCard extends Component {
     updateCurrentSelectedEvent = () => {
         //redux store 
         let action = {
-            id: this.props.eventId,
-            hex: this.props.eventColor,
+            eventId: this.props.eventId,
+            eventColor: this.props.eventColor,
             startTime: this.props.startTime,
             endTime: this.props.endTime,
-            title: this.props.eventTitle,
-            description: this.props.eventDescription
+            eventTitle: this.props.eventTitle,
+            eventDescription: this.props.eventDescription
         };
-        ToastAndroid.show(
-            action.id + " " + action.hex + " " + action.startTime + " " + action.endTime + " " + action.title + " " + action.description, ToastAndroid.SHORT
-        );
 
-    
+        console.log(action.eventId + " " + action.eventColor + " " + action.startTime + " " + action.endTime + " " + action.eventTitle + " " + action.eventDescription);
+        
+        console.log("rello")
         this.props.dispatch({ type: 'UPDATE_CURRENT', ...action });
     }
 

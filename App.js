@@ -21,8 +21,8 @@ export default class App extends Component {
       /* <DateTimePickerTextComponent /> */
       //{/* </View> */}
       <Provider store={store}>
-        {/* <AppStackNavigator /> */}
-        <AppDrawerNavigator />
+        <AppStackNavigator />
+        {/* <AppDrawerNavigator /> */}
       </Provider>
     );
   }

@@ -4,10 +4,11 @@ import Icon from 'react-native-vector-icons/Ionicons'
 import Dialog, { DialogContent } from 'react-native-popup-dialog';
 import DatePicker from 'react-native-datepicker'
 import moment from 'moment';
+import { connect } from "react-redux";
 
 var SQLite = require('react-native-sqlite-storage');
 var db = SQLite.openDatabase({ name: 'calendarr.db', createFromLocation: '~calendar.db' }, this.openCB, this.errorCB);
-export default class EventEditScreen extends Component {
+class EventEditScreen extends Component {
 
     static navigationOptions = ({ navigation }) => {
         const { params = {} } = navigation.state;
@@ -23,6 +24,7 @@ export default class EventEditScreen extends Component {
                         } else {
                             // ToastAndroid.show("update",ToastAndroid.SHORT);
                             params.updateEvent();
+                            this.updateCurrentSelectedEvent();
                         }
 
                     }}
@@ -38,55 +40,54 @@ export default class EventEditScreen extends Component {
 
         let startDate = new Date(this.props.navigation.state.params.startTime * 1000);
         let endDate = new Date(this.props.navigation.state.params.endTime * 1000);
-        let id = this.props.navigation.state.params.eventId;
         // let id = this.props.navigation.state.params.eventId;
-        this.props.navigation.setParams({
-            eventId: id,
-            addNewEvent: this._addNewEvent,
-            updateEvent: this._updateEvent,
-        });
+        // let id = this.props.navigation.state.params.eventId;
+        // this.props.navigation.setParams({
+        //     eventId: id,
+        //     addNewEvent: this._addNewEvent,
+        //     updateEvent: this._updateEvent,
+        // });
         // ToastAndroid.show(id + "", ToastAndroid.SHORT);
 
         this.state = {
-            selectedEventColor: {
-            },
-            colors: [],
+            eventColor: {
+            },            
             colorPickerDialogVisible: false,
-            eventId: id,
-            eventStartDate: startDate,
-            eventEndDate: endDate,
+            startTime: startDate,
+            endTime: endDate,
             eventTitle: "",
             eventDescription: ""
         };
 
+        const currentColor = this.props.eventColorList.find(element => element.hex === this.props.eventColor);
+        this.setState({
+            eventColor: currentColor,
+        })
+
         //Lấy danh sách màu
-        db.transaction((tx) => {
-            tx.executeSql('SELECT * FROM event_color', [], (tx, results) => {
-                console.log("Query completed");
+        // db.transaction((tx) => {
+        //     tx.executeSql('SELECT * FROM event_color', [], (tx, results) => {
+        //         console.log("Query completed");
 
-                let len = results.rows.length;
-                // ToastAndroid.show(`${len}`, ToastAndroid.SHORT);
-                for (let i = 0; i < len; i++) {
-                    let row = results.rows.item(i);
-                    let color = {
-                        id: row.id,
-                        name: row.name,
-                        hex: row.hex,
-                    }
-                    this.setState({
-                        colors: [...this.state.colors, color]
-                    })
-                    //ToastAndroid.show(`${color.name}   ${color.hex}`, ToastAndroid.SHORT);
-                }
+        //         let len = results.rows.length;
+        //         // ToastAndroid.show(`${len}`, ToastAndroid.SHORT);
+        //         for (let i = 0; i < len; i++) {
+        //             let row = results.rows.item(i);
+        //             let color = {
+        //                 id: row.id,
+        //                 name: row.name,
+        //                 hex: row.hex,
+        //             }
+        //             this.setState({
+        //                 colors: [...this.state.colors, color]
+        //             })
+        //             //ToastAndroid.show(`${color.name}   ${color.hex}`, ToastAndroid.SHORT);
+        //         }
 
-                //Set màu hiện tại của sự kiện nếu được gọi từ EventDetailScreen thông qua navigation
-                const test = this.state.colors.find(element => element.hex === this.props.navigation.state.params.eventColor);
-                this.setState({
-                    selectedEventColor: test,
-
-                })
-            });
-        });
+        //         //Set màu hiện tại của sự kiện nếu được gọi từ EventDetailScreen thông qua navigation
+                
+        //     });
+        // });
     }
 
     _addNewEvent = () => {
@@ -94,9 +95,9 @@ export default class EventEditScreen extends Component {
         db.transaction((tx) => {
             tx.executeSql('INSERT INTO event(color_hexid, starttime, endtime, title, description) values(?,?,?,?,?)',
                 [
-                    this.state.selectedEventColor.hex,
-                    moment(this.state.eventStartDate, "dddd, DD/MM/YYYY, HH:mm").unix(),
-                    moment(this.state.eventEndDate, "dddd, DD/MM/YYYY, HH:mm").unix(),
+                    this.state.eventColor.hex,
+                    moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
+                    moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
                     this.state.eventTitle,
                     this.state.eventDescription,
                 ], (tx, results) => {
@@ -107,11 +108,11 @@ export default class EventEditScreen extends Component {
 
     _updateEvent = () => {
         let test = 'UPDATE event set color_hexid = '
-            + this.state.selectedEventColor.hex +
+            + this.state.eventColor.hex +
             ', starttime = '
-            + moment(this.state.eventStartDate, "dddd, DD/MM/YYYY, HH:mm").unix() +
+            + moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix() +
             ', endtime = '
-            + moment(this.state.eventEndDate, "dddd, DD/MM/YYYY, HH:mm").unix() +
+            + moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix() +
             ', title = '
             + this.state.eventTitle +
             ', description = '
@@ -121,13 +122,13 @@ export default class EventEditScreen extends Component {
         db.transaction((tx) => {
             tx.executeSql('UPDATE event set color_hexid = ?, starttime = ?, endtime = ?, title = ?, description = ? WHERE id = ?',
                 [
-                    this.state.selectedEventColor.hex,
-                    moment(this.state.eventStartDate, "dddd, DD/MM/YYYY, HH:mm").unix(),
-                    moment(this.state.eventEndDate, "dddd, DD/MM/YYYY, HH:mm").unix(),
+                    this.state.eventColor.hex,
+                    moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
+                    moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
                     this.state.eventTitle,
                     this.state.eventDescription,
                     this.state.eventId,
-                ], (tx, results) => {                                       
+                ], (tx, results) => {
                 });
         });
     }
@@ -136,6 +137,7 @@ export default class EventEditScreen extends Component {
         this.props.navigation.setParams({
             addNewEvent: this._addNewEvent,
             updateEvent: this._updateEvent,
+            updateCurrentSelectedEvent: this._updateCurrentSelectedEvent,
             eventId: this.state.eventId
         })
     }
@@ -199,17 +201,27 @@ export default class EventEditScreen extends Component {
         return false;
     }
 
+    _updateCurrentSelectedEvent = () => {
+        //redux store 
+        let action = {
+            eventId: this.props.eventId,
+            eventColor: this.state.eventColor,
+            startTime: moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix(),        
+            endTime: moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix(),            
+            eventTitle: this.state.eventTitle,
+            eventDescription: this.state.eventDescription
+        };
+
+        console.log(action.eventId + " " + action.eventColor + " " + action.startTime + " " + action.endTime + " " + action.eventTitle + " " + action.eventDescription);
+        
+        this.props.dispatch({ type: 'UPDATE_CURRENT', ...action });
+    }
+
     render() {
-
-        const { navigation } = this.props;
-        const eventTitle = navigation.getParam('eventTitle', '');
-        const eventDescription = navigation.getParam('eventDescription', '');
-
-
-        let colorList = this.state.colors.map((item, key) => {
+        let colorList = this.props.eventColorList.map((item, key) => {
             return (
                 <View key={key}>
-                    <TouchableOpacity onPress={() => { this.setState({ selectedEventColor: item, colorPickerDialogVisible: false }) }}>
+                    <TouchableOpacity onPress={() => { this.setState({ eventColor: item, colorPickerDialogVisible: false }) }}>
                         <View style={{ flexDirection: 'row', padding: 10 }}>
                             <View >
                                 <View style={{ height: 30, width: 30, backgroundColor: item.hex }}></View>
@@ -224,13 +236,13 @@ export default class EventEditScreen extends Component {
         })
         return (
             <View style={{ flex: 1, backgroundColor: 'white' }}>
-                <Button title='test' onPress={() => { ToastAndroid.show(this.state.eventId + " ", ToastAndroid.SHORT) }}></Button>
+                <Button title='test' onPress={() => { ToastAndroid.show(this.props.startTime * 1000 + " ", ToastAndroid.SHORT) }}></Button>
                 <View style={{ borderBottomColor: 'black', borderBottomWidth: 1, paddingBottom: 10, paddingLeft: 10 }}>
                     <TextInput
+                        defaultValue={this.props.eventTitle}
                         style={styles.titleText}
                         placeholder='Nhập tiêu đề'
                         onChangeText={(text) => { this.setState({ eventTitle: text }) }}>
-                        {eventTitle == '' ? '' : eventTitle}
                     </TextInput>
                 </View>
 
@@ -249,13 +261,13 @@ export default class EventEditScreen extends Component {
                                 dateInput: { borderWidth: 0 }
                             }}
                             is24Hour={true}
-                            date={this.state.eventStartDate}
+                            date={this.state.startTime}
                             mode="datetime"
                             format="dddd, DD/MM/YYYY, HH:mm"
                             confirmBtnText="OK"
                             cancelBtnText="Hủy"
                             onDateChange={(date) => {
-                                this.setState({ eventStartDate: date });
+                                this.setState({ startTime: date });
                                 // ToastAndroid.show(this.state.eventStartDate+"", ToastAndroid.SHORT);
                             }}
                         />
@@ -269,14 +281,15 @@ export default class EventEditScreen extends Component {
                                 dateInput: { borderWidth: 0 }
                             }}
                             is24Hour={true}
-                            date={this.state.eventEndDate}
+
+                            date={this.props.endTime}
                             mode="datetime"
                             format="dddd, DD/MM/YYYY, HH:mm"
                             confirmBtnText="OK"
                             cancelBtnText="Hủy"
                             onDateChange={(date) => {
-                                this.setState({ eventEndDate: date });
-                                ToastAndroid.show(this.state.eventEndDate, ToastAndroid.SHORT)
+                                this.setState({ endTime: date });
+                                // ToastAndroid.show(this.state.eventEndDate, ToastAndroid.SHORT)
                             }}
                         />
                     </View>
@@ -292,11 +305,11 @@ export default class EventEditScreen extends Component {
 
                 <View style={{ flexDirection: 'row', marginTop: 20 }}>
                     <View style={styles.icon}>
-                        <View style={{ width: 20, height: 20, backgroundColor: this.state.selectedEventColor.hex }}></View>
+                        <View style={{ width: 20, height: 20, backgroundColor: this.state.eventColor.hex }}></View>
                     </View>
                     <View style={{ flex: 8, justifyContent: 'center' }}>
                         <TouchableOpacity onPress={() => { this.setState({ colorPickerDialogVisible: true }) }}>
-                            <Text style={styles.detailText}>{this.state.selectedEventColor.name}</Text>
+                            <Text style={styles.detailText}>{this.state.eventColor.name}</Text>
                         </TouchableOpacity>
                         <Dialog visible={this.state.colorPickerDialogVisible}
                             onTouchOutside={() => { this.setState({ colorPickerDialogVisible: false }) }}>
@@ -315,10 +328,10 @@ export default class EventEditScreen extends Component {
                         <ScrollView>
                             <TextInput
                                 style={styles.detailText}
+                                defaultValue={this.props.eventDescription}
                                 multiline={true}
                                 placeholder='Nhập ghi chú'
                                 onChangeText={(text) => { this.setState({ eventDescription: text }) }}>
-                                {eventDescription == '' ? '' : eventDescription}
                             </TextInput>
                         </ScrollView>
                     </View>
@@ -327,6 +340,20 @@ export default class EventEditScreen extends Component {
         );
     }
 }
+
+function mapStateToProps(state) {
+    return {
+        eventId: state.currentEvent.eventId,
+        eventColor: state.currentEvent.eventColor,
+        startTime: state.currentEvent.startTime,
+        endTime: state.currentEvent.endTime,
+        eventTitle: state.currentEvent.eventTitle,
+        eventDescription: state.currentEvent.eventDescription,
+        eventColorList: state.eventColorList
+    }
+}
+
+export default connect(mapStateToProps)(EventEditScreen);
 
 const styles = StyleSheet.create({
     title: {

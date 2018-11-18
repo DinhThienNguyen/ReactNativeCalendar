@@ -112,13 +112,8 @@ class EventDetailScreen extends Component {
                     </Button>
                     <Button title='Chỉnh sửa' onPress={() => {
                         this.props.navigation.navigate('EventEdit', {
-                            eventId: eventId,
-                            eventColor: eventColor,
-                            startTime: startTime,
-                            endTime: endTime,
-                            eventTitle: eventTitle,
-                            eventDescription: eventDescription,
-                            screenTitle: 'Chỉnh sửa'
+                            startTime: this.props.startTime,
+                            endTime: this.props.endTime
                         });
                     }}></Button>
                     <View style={{ flexDirection: 'row', marginTop: 20 }}>
@@ -167,12 +162,12 @@ class EventDetailScreen extends Component {
 
 function mapStateToProps(state) {
     return {
-        eventId: state.currentEvent.id,
-        eventColor: state.currentEvent.hex,
-        startTime: state.currentEvent.startTime,
-        endTime: state.currentEvent.endTime,
-        eventTitle: state.currentEvent.title,
-        eventDescription: state.currentEvent.description
+        eventId: state.currentSelectedEvent.eventId,
+        eventColor: state.currentSelectedEvent.eventColor,
+        startTime: state.currentSelectedEvent.startTime,
+        endTime: state.currentSelectedEvent.endTime,
+        eventTitle: state.currentSelectedEvent.eventTitle,
+        eventDescription: state.currentSelectedEvent.eventDescription
     }
 }
 
