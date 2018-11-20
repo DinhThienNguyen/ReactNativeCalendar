@@ -71,9 +71,9 @@ class EventCard extends Component {
             eventDescription: this.props.eventDescription
         };
 
-        console.log(action.eventId + " " + action.eventColor + " " + action.startTime + " " + action.endTime + " " + action.eventTitle + " " + action.eventDescription);
+        // console.log(action.eventId + " " + action.eventColor + " " + action.startTime + " " + action.endTime + " " + action.eventTitle + " " + action.eventDescription);
         
-        console.log("rello")
+        // console.log("rello")
         this.props.dispatch({ type: 'UPDATE_CURRENT', ...action });
     }
 

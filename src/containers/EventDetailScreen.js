@@ -106,10 +106,6 @@ class EventDetailScreen extends Component {
                     </View>
                 </View>
                 <View style={styles.detail}>
-                    <Button title='test' onPress={() => {
-                        this.updateCurrentSelectedEvent();
-                    }}>
-                    </Button>
                     <Button title='Chỉnh sửa' onPress={() => {
                         this.props.navigation.navigate('EventEdit', {
                             startTime: this.props.startTime,

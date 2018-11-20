@@ -10,7 +10,7 @@ const initialState = {
 const currentSelectedEvent = (state = initialState, action) => {
     switch (action.type) {
         case 'UPDATE_CURRENT':
-            console.log(action);
+            // console.log(action);
             return {
                 eventId: action.eventId,
                 eventColor: action.eventColor,

@@ -6,7 +6,7 @@ import { connect } from "react-redux";
 var SQLite = require('react-native-sqlite-storage');
 var db = SQLite.openDatabase({ name: 'calendarr.db', createFromLocation: '~calendar.db' }, this.openCB, this.errorCB);
 
-var PushNotification = require('react-native-push-notification');
+var eventListLoaded = false;
 
 class HomeScreen extends Component {
 
@@ -14,23 +14,17 @@ class HomeScreen extends Component {
         super(props);
         ToastAndroid.show("Constructed", ToastAndroid.SHORT);
         this.state = {
-            appState: AppState.currentState,
-            events: [],            
             isDaySelected: true,
             isWeekSelected: false,
             isMonthSelected: false,
         };
-        this.refreshEventColorList();
+        if (!eventListLoaded) {
+            this.refreshEventColorList();
+            this.refreshEventList();
+            eventListLoaded = true;
+        }
     }
-<<<<<<< HEAD
 
-    // componentDidMount() {
-    //     this.refreshEventList()
-    // }
-
-=======
-    
->>>>>>> 48ed9e5392aa6a4ccbeb9cbe1ad10b033115c3e4
     errorCB(err) {
         console.log("SQL Error: " + err);
     }
@@ -43,29 +37,12 @@ class HomeScreen extends Component {
         console.log("Database OPENED");
     }
 
-    componentDidMount() {
-        AppState.addEventListener('change', this._handleAppStateChange);
-    }
-
-    componentWillUnmount() {
-        AppState.removeEventListener('change', this._handleAppStateChange);
-    }
-
-    _handleAppStateChange = (nextAppState) => {
-        if (nextAppState === 'active') {
-            this.refreshEventList()
-        }
-        this.setState({ appState: nextAppState });
-    }
-
     refreshEventColorList = () => {
-        let colors = [];
         db.transaction((tx) => {
             tx.executeSql('SELECT * FROM event_color', [], (tx, results) => {
                 console.log("Query completed");
 
                 let len = results.rows.length;
-                // ToastAndroid.show(`${len}`, ToastAndroid.SHORT);
                 for (let i = 0; i < len; i++) {
                     let row = results.rows.item(i);
                     let color = {
@@ -73,27 +50,17 @@ class HomeScreen extends Component {
                         name: row.name,
                         hex: row.hex,
                     }
-                    colors = [...colors, color];                    
-                    //ToastAndroid.show(`${color.name}   ${color.hex}`, ToastAndroid.SHORT);
-                }                                
+                    this.props.dispatch({ type: 'ADD_COLOR', ...color });
+                }
             });
         });
-        this.props.dispatch({ type: 'UPDATE_COLOR_LIST', ...colors });
     }
 
     refreshEventList = (startDate, endDate) => {
-        this.setState({
-            events: []
-        });
-
         db.transaction((tx) => {
             tx.executeSql('SELECT * FROM event', [], (tx, results) => {
                 console.log("Query completed");
-
-                // Get rows with Web SQL Database spec compliance.
-
                 let len = results.rows.length;
-                //ToastAndroid.show(`${len}`, ToastAndroid.SHORT);
                 for (let i = 0; i < len; i++) {
                     let row = results.rows.item(i);
                     let event = {
@@ -104,10 +71,8 @@ class HomeScreen extends Component {
                         eventTitle: row.title,
                         eventDescription: row.description
                     }
-                    this.setState({
-                        events: [...this.state.events, event]
-                    })
-                    //ToastAndroid.show(`${row.title}${row.description}`, ToastAndroid.SHORT);
+
+                    this.props.dispatch({ type: 'ADD_EVENT', ...event });
                 }
             });
         });
@@ -138,7 +103,7 @@ class HomeScreen extends Component {
     }
 
     render() {
-        let eventCardList = this.state.events.map((item, key) => {
+        let eventCardList = this.props.events.map((item, key) => {
             return (
                 <View key={key}>
                     <EventCard
@@ -149,20 +114,12 @@ class HomeScreen extends Component {
                         endTime={item.endTime}
                         eventTitle={item.eventTitle}
                         eventDescription={item.eventDescription}
-                        cardColor={item.color_hexid}></EventCard>
+                        cardColor={item.eventColor}></EventCard>
                 </View>
             );
         })
-        // PushNotification.localNotificationSchedule({
-        //     //... You can use all the options from localNotifications
-        //     message: "My Notification Message", // (required)
-        //     date: new Date(Date.now() + (20 * 1000)) // in 60 secs
-        //   });
         return (
             <View style={styles.container}>
-                <Button title='test' onPress={() => {
-                    this.props.navigation.navigate('EventDetail')
-                }}></Button>
                 <View style={styles.eventListView}>
                     <ScrollView>
                         {eventCardList}
@@ -186,7 +143,13 @@ class HomeScreen extends Component {
     }
 }
 
-export default connect()(HomeScreen);
+function mapStateToProps(state) {
+    return {
+        events: state.eventList
+    }
+}
+
+export default connect(mapStateToProps)(HomeScreen);
 
 const styles = StyleSheet.create({
     container: {
