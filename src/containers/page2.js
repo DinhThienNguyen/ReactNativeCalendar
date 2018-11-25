@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
- class Page2 extends Component<Props> {
+ class Page2 extends Component {
     render() {
         return (
             <View style={styles.container}>
