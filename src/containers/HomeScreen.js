@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, Button, ToastAndroid, AppState, ScrollView } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Button, ToastAndroid, ScrollView } from 'react-native';
 import EventCard from '../components/EventCard'
 import { connect } from "react-redux";
 

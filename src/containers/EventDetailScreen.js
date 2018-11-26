@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, Alert, ScrollView, ToastAndroid, Button } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, ToastAndroid, Button } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'
 import { connect } from "react-redux";
 
@@ -7,10 +7,6 @@ class EventDetailScreen extends Component {
 
     static navigationOptions = {
         header: null
-    }
-
-    alertDetail = () => {
-        Alert.alert(this.props.title);
     }
 
     getCurrentDateInMillis = () => {
@@ -60,41 +56,14 @@ class EventDetailScreen extends Component {
     }
 
     isEventOnlyToday = (startTime, endTime) => {
-        //ToastAndroid.show(this.getCurrentDateInMillis()+"", ToastAndroid.SHORT);
 
         if ((startTime - this.getCurrentDateInMillis < 86400) && (endTime - startTime < 86400)) {
-            //ToastAndroid.show('isEventOnlyToday: true', ToastAndroid.SHORT);
             return true;
         }
-        //ToastAndroid.show('isEventOnlyToday: false', ToastAndroid.SHORT);
         return false;
     }
 
-    updateCurrentSelectedEvent = () => {
-        //redux store 
-        let action = {
-            id: 1,
-            hex: '#009ae4',
-            startTime: 1540227600,
-            endTime: 1540227600,
-            title: 'test',
-            description: 'test'
-        };
-        ToastAndroid.show(
-            action.id + " " + action.hex + " " + action.startTime + " " + action.endTime + " " + action.title + " " + action.description, ToastAndroid.SHORT
-        );
-        this.props.dispatch({ type: 'UPDATE_CURRENT', action });
-    }
-
     render() {
-        // const { navigation } = this.props;
-        // const eventId = navigation.getParam('eventId', '-1');
-        // const eventTitle = navigation.getParam('eventTitle', 'Không tiêu đề');
-        // const startTime = navigation.getParam('startTime', '0');
-        // const endTime = navigation.getParam('endTime', '0');
-        // const eventDescription = navigation.getParam('eventDescription', '0');
-        // const eventColor = navigation.getParam('eventColor', 'Không tiêu đề');
-        // ToastAndroid.show(eventId + '', ToastAndroid.SHORT);
         return (
             <View style={{ flex: 1 }}>
                 <View style={{ flex: 3, justifyContent: 'flex-end', backgroundColor: this.props.eventColor }}>

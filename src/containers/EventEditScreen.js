@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, TextInput, View, Alert, ScrollView, TouchableOpacity, ToastAndroid, Button } from 'react-native';
+import { StyleSheet, Text, TextInput, View, ScrollView, TouchableOpacity, ToastAndroid, Button } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'
 import Dialog, { DialogContent } from 'react-native-popup-dialog';
 import DatePicker from 'react-native-datepicker'
-import { StackActions, NavigationActions } from 'react-navigation';
+import { NavigationActions } from 'react-navigation';
 import moment from 'moment';
 import { connect } from "react-redux";
 
@@ -18,27 +18,11 @@ class EventEditScreen extends Component {
             headerRight: (
                 <Button
                     onPress={() => {
-                        // ToastAndroid.show(params.eventId + "", ToastAndroid.SHORT);
-                        console.log("\n\n\n\n\n\n\ntest id " + params.eventId);
                         if (params.eventId == -1) {
                             params.addNewEvent();
-                            // const resetAction = StackActions.reset({
-                            //     index: 0,
-                            //     actions: [
-                            //         NavigationActions.navigate({ routeName: 'Home' }),
-                            //     ],
-                            // });
-                            // navigation.dispatch(resetAction);
                         } else {
                             params.updateEvent();
                             params.updateCurrentSelectedEvent();
-                            // const resetAction = StackActions.reset({
-                            //     index: 1,
-                            //     actions: [
-                            //         NavigationActions.navigate({ routeName: 'Home' }),
-                            //         NavigationActions.navigate({ routeName: 'EventDetail' }),
-                            //     ],
-                            // });
                             navigation.dispatch(NavigationActions.back());
                         }
                     }}
@@ -54,17 +38,8 @@ class EventEditScreen extends Component {
 
         let startDate = new Date(this.props.navigation.state.params.startTime * 1000);
         let endDate = new Date(this.props.navigation.state.params.endTime * 1000);
-        // let id = this.props.navigation.state.params.eventId;
-        // let id = this.props.navigation.state.params.eventId;
-        // this.props.navigation.setParams({
-        //     eventId: id,
-        //     addNewEvent: this._addNewEvent,
-        //     updateEvent: this._updateEvent,
-        // });
-        // ToastAndroid.show(id + "", ToastAndroid.SHORT);
 
         const currentColor = this.props.eventColorList.find(element => element.hex === this.props.eventColor);
-        // ToastAndroid.show(currentColor.color.hex + " ", ToastAndroid.SHORT);
 
         this.state = {
             eventColor: currentColor,
@@ -92,18 +67,6 @@ class EventEditScreen extends Component {
     }
 
     _updateEvent = () => {
-        // let test = 'UPDATE event set color_hexid = '
-        //     + this.state.eventColor.hex +
-        //     ', starttime = '
-        //     + moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix() +
-        //     ', endtime = '
-        //     + moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix() +
-        //     ', title = '
-        //     + this.state.eventTitle +
-        //     ', description = '
-        //     + this.state.eventDescription +
-        //     ' WHERE id = ' + this.props.eventId;
-        // ToastAndroid.show(test + " ", ToastAndroid.SHORT);
         db.transaction((tx) => {
             tx.executeSql('UPDATE event set color_hexid = ?, starttime = ?, endtime = ?, title = ?, description = ? WHERE id = ?',
                 [
@@ -174,13 +137,9 @@ class EventEditScreen extends Component {
     }
 
     isEventOnlyToday = (startTime, endTime) => {
-        //ToastAndroid.show(this.getCurrentDateInMillis()+"", ToastAndroid.SHORT);
-
         if ((startTime - this.getCurrentDateInMillis < 86400) && (endTime - startTime < 86400)) {
-            //ToastAndroid.show('isEventOnlyToday: true', ToastAndroid.SHORT);
             return true;
         }
-        //ToastAndroid.show('isEventOnlyToday: false', ToastAndroid.SHORT);
         return false;
     }
 
@@ -193,8 +152,6 @@ class EventEditScreen extends Component {
             eventTitle: this.state.eventTitle,
             eventDescription: this.state.eventDescription
         };
-
-        // console.log(action.eventId + " " + action.eventColor + " " + action.startTime + " " + action.endTime + " " + action.eventTitle + " " + action.eventDescription);
 
         this.props.dispatch({ type: 'UPDATE_CURRENT', ...action });
         this.props.dispatch({ type: 'UPDATE_EVENT', ...action });
@@ -250,7 +207,6 @@ class EventEditScreen extends Component {
                             cancelBtnText="Hủy"
                             onDateChange={(date) => {
                                 this.setState({ startTime: date });
-                                // ToastAndroid.show(this.state.eventStartDate+"", ToastAndroid.SHORT);
                             }}
                         />
                         <DatePicker
@@ -271,7 +227,6 @@ class EventEditScreen extends Component {
                             cancelBtnText="Hủy"
                             onDateChange={(date) => {
                                 this.setState({ endTime: date });
-                                // ToastAndroid.show(this.state.eventEndDate, ToastAndroid.SHORT)
                             }}
                         />
                     </View>
