@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, Button, ToastAndroid, ScrollView } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Button, ToastAndroid, ScrollView, Alert } from 'react-native';
 import EventCard from '../components/EventCard'
-// import NotifService from '../components/NotifService';
-import PushNotification from 'react-native-push-notification';
+import NotifService from '../components/NotifService';
 import { connect } from "react-redux";
 
 var SQLite = require('react-native-sqlite-storage');
@@ -20,29 +19,42 @@ class HomeScreen extends Component {
             isWeekSelected: false,
             isMonthSelected: false,
         };
-        // this.notif = new NotifService(this.onRegister.bind(this), this.onNotif.bind(this));
+        this.notif = new NotifService(this.onNotif.bind(this));
         console.log("notif");
         if (!eventListLoaded) {
             this.refreshEventColorList();
             this.refreshEventList();
             eventListLoaded = true;
         }
+        PushNotification.configure({
+            onNotification: this.onNotif.bind(this)
+        })
     }
 
-    // onRegister(token) {
-    //     Alert.alert("Registered !", JSON.stringify(token));
-    //     console.log(token);
-    //     this.setState({ registerToken: token.token, gcmRegistered: true });
-    // }
+    onNotif(notif){        
+        console.log("notifID: " + notif.id);
+        db.transaction((tx) => {
+            tx.executeSql('SELECT * FROM event where id = ?', [notif.id], (tx, results) => {
+                console.log("Query completed");
 
-    // onNotif(notif) {
-    //     console.log(notif);
-    //     Alert.alert(notif.title, notif.message);
-    // }
-
-    // handlePerm(perms) {
-    //     Alert.alert("Permissions", JSON.stringify(perms));
-    // }
+                let len = results.rows.length;
+                for (let i = 0; i < len; i++) {
+                    let row = results.rows.item(i);
+                    let event = {
+                        eventId: row.id,
+                        eventColor: row.color_hexid,
+                        startTime: row.starttime,
+                        endTime: row.endtime,
+                        eventTitle: row.title,
+                        eventDescription: row.description
+                    }
+                    console.log(event);
+                    this.props.dispatch({ type: 'UPDATE_CURRENT', ...event });
+                }
+            });
+        });
+        this.props.navigation.navigate('EventDetail');
+    }
 
     errorCB(err) {
         console.log("SQL Error: " + err);
@@ -139,12 +151,8 @@ class HomeScreen extends Component {
         })
         return (
             <View style={styles.container}>
-                <Button title="test" onPress={() => {
-                    PushNotification.localNotificationSchedule({
-                        //... You can use all the options from localNotifications
-                        message: "My Notification Message", // (required)
-                        date: new Date(Date.now() + (60 * 1000)) // in 60 secs
-                    });
+                <Button title="test" onPress={() => {                    
+                    this.notif.scheduleNotif(5, 3);
                 }}></Button>
                 <View style={styles.eventListView}>
                     <ScrollView>
