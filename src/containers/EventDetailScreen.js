@@ -77,8 +77,7 @@ class EventDetailScreen extends Component {
                 <View style={styles.detail}>
                     <Button title='Chỉnh sửa' onPress={() => {
                         this.props.navigation.navigate('EventEdit', {
-                            startTime: this.props.startTime,
-                            endTime: this.props.endTime
+                            screenTitle: 'Chỉnh sửa'
                         });
                     }}></Button>
                     <View style={{ flexDirection: 'row', marginTop: 20 }}>

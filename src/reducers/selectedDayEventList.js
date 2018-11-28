@@ -1,4 +1,4 @@
-const eventList = (state = [], action) => {
+const selectedDayEventList = (state = [], action) => {
     switch (action.type) {
         case 'ADD_EVENT':
             // console.log(action);
@@ -12,9 +12,12 @@ const eventList = (state = [], action) => {
                 (event.eventId === action.eventId)
                     ? { ...action } : event)
 
+        case 'RESET_LIST':
+            state = [];            
+
         default:
             return state
     }
 }
 
-export default eventList
+export default selectedDayEventList

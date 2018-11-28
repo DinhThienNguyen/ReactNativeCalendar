@@ -20,6 +20,7 @@ class EventEditScreen extends Component {
                     onPress={() => {
                         if (params.eventId == -1) {
                             params.addNewEvent();
+                            navigation.dispatch(NavigationActions.back());
                         } else {
                             params.updateEvent();
                             params.updateCurrentSelectedEvent();
@@ -36,8 +37,8 @@ class EventEditScreen extends Component {
     constructor(props) {
         super(props);
 
-        let startDate = new Date(this.props.navigation.state.params.startTime * 1000);
-        let endDate = new Date(this.props.navigation.state.params.endTime * 1000);
+        let startDate = new Date(this.props.startTime * 1000);
+        let endDate = new Date(this.props.endTime * 1000);
 
         const currentColor = this.props.eventColorList.find(element => element.hex === this.props.eventColor);
 
@@ -52,18 +53,48 @@ class EventEditScreen extends Component {
     }
 
     _addNewEvent = () => {
+        let lastEventId = -1;
+        if(this.state.eventTitle === ''){
+            this.setState({
+                eventTitle: 'Không có tiêu đề'
+            })
+        }
+        if(this.state.eventDescription === ''){
+            this.setState({
+                eventDescription: 'Không có mô tả'
+            })
+        }
         db.transaction((tx) => {
-            tx.executeSql('INSERT INTO event(color_hexid, starttime, endtime, title, description) values(?,?,?,?,?)',
-                [
-                    this.state.eventColor.hex,
-                    moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
-                    moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
-                    this.state.eventTitle,
-                    this.state.eventDescription,
-                ], (tx, results) => {
-                    console.log("Query completed");
+            // tx.executeSql('INSERT INTO event(color_hexid, starttime, endtime, title, description) values(?,?,?,?,?)',
+            //     [
+            //         this.state.eventColor.hex,
+            //         moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
+            //         moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
+            //         this.state.eventTitle,
+            //         this.state.eventDescription,
+            //     ], (tx, results) => {                    
+            //     });
+            tx.executeSql('SELECT id FROM event ORDER BY id DESC', [], (tx, results) => {
+                    lastEventId = results.id;
+                    console.log(lastEventId);
                 });
         });
+        let selectedDay = moment(this.props.navigation.getParam('selectedDay', 0) * 1000).startOf('day');
+        let startDate = moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").startOf('day');
+        if (Number(selectedDay) === Number(startDate)) {
+            let event = {
+                eventId: lastEventId,
+                eventColor: this.state.eventColor,
+                startTime: moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
+                endTime: moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
+                eventTitle: this.state.eventTitle,
+                eventDescription: this.state.eventDescription
+            };
+
+            console.log("update store: " + event);
+
+            this.props.dispatch({ type: 'ADD_EVENT', ...event });
+        }
     }
 
     _updateEvent = () => {
@@ -88,59 +119,6 @@ class EventEditScreen extends Component {
             updateCurrentSelectedEvent: this._updateCurrentSelectedEvent,
             eventId: this.props.eventId
         })
-    }
-
-    getCurrentDateInMillis = () => {
-        let converter = new Date();
-        converter.setHours(0);
-        converter.setMinutes(0);
-        converter.setMilliseconds(0);
-        converter.setSeconds(0);
-        return converter.getTime() / 1000;
-    }
-
-    convertMillisToDateString = (millis) => {
-        let converter = new Date(millis * 1000);
-        dayInWeek = "";
-        switch (converter.getDay()) {
-            case 0:
-                dayInWeek = "Chủ nhật";
-                break;
-            case 1:
-                dayInWeek = "Thứ hai";
-                break;
-            case 2:
-                dayInWeek = "Thứ ba";
-                break;
-            case 3:
-                dayInWeek = "Thứ tư";
-                break;
-            case 4:
-                dayInWeek = "Thứ năm";
-                break;
-            case 5:
-                dayInWeek = "Thứ sáu";
-                break;
-            case 6:
-                dayInWeek = "Thứ bảy";
-                break;
-        }
-        return dayInWeek + ", " + converter.getDate() + "/" + (converter.getMonth() + 1) + "/" + converter.getFullYear() + ", " + converter.getHours() + ":" + converter.getMinutes();
-    }
-
-    convertMillisToHour = (millis) => {
-        return new Date(millis * 1000).getHours;
-    }
-
-    convertMillisToMinute = (millis) => {
-        return new Date(millis * 1000).getMinutes;
-    }
-
-    isEventOnlyToday = (startTime, endTime) => {
-        if ((startTime - this.getCurrentDateInMillis < 86400) && (endTime - startTime < 86400)) {
-            return true;
-        }
-        return false;
     }
 
     _updateCurrentSelectedEvent = () => {

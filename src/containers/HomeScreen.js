@@ -1,6 +1,11 @@
 import React, { Component } from 'react';
 import { StyleSheet, View, TouchableOpacity, Text, Button, ToastAndroid, ScrollView, Alert } from 'react-native';
 import EventCard from '../components/EventCard'
+import Dialog, { DialogContent } from 'react-native-popup-dialog';
+import { Calendar } from 'react-native-calendars';
+import ActionButton from 'react-native-action-button';
+import moment from 'moment';
+import Icon from 'react-native-vector-icons/Ionicons'
 import NotifService from '../components/NotifService';
 import { connect } from "react-redux";
 
@@ -11,31 +16,43 @@ var eventListLoaded = false;
 
 class HomeScreen extends Component {
 
+    static navigationOptions = ({ navigation }) => {
+        const { params = {} } = navigation.state;
+        return {
+            headerTitle: <TouchableOpacity style={{ flex: 7, alignItems: 'center' }} onPress={() => { params.toggleCalendarDialog() }}>
+                <Text style={styles.screenTitle}>{params.currentDate}</Text>
+            </TouchableOpacity>,
+            headerRight: (
+                <TouchableOpacity
+                    style={{ flex: 3, alignItems: 'center', justifyContent: 'center', padding: 10 }}
+                    onPress={() => {
+                        params._refreshSelectedDayEventList(moment().unix())
+                    }}
+                >
+                    <Icon name="md-calendar" size={40} />
+                </TouchableOpacity>
+            ),
+        };
+    };
+
     constructor(props) {
         super(props);
-        ToastAndroid.show("Constructed", ToastAndroid.SHORT);
         this.state = {
-            isDaySelected: true,
-            isWeekSelected: false,
-            isMonthSelected: false,
+            calendarDialogVisible: false,
+            selectedDay: moment().unix(),
+            currentDate: `${new Date().getMonth() + 1}/${new Date().getFullYear()}`
         };
         this.notif = new NotifService(this.onNotif.bind(this));
-        console.log("notif");
         if (!eventListLoaded) {
             this.refreshEventColorList();
-            this.refreshEventList();
+            this.refreshSelectedDayEventList(moment().unix());
             eventListLoaded = true;
         }
-        PushNotification.configure({
-            onNotification: this.onNotif.bind(this)
-        })
     }
 
-    onNotif(notif){        
-        console.log("notifID: " + notif.id);
+    onNotif(notif) {
         db.transaction((tx) => {
             tx.executeSql('SELECT * FROM event where id = ?', [notif.id], (tx, results) => {
-                console.log("Query completed");
 
                 let len = results.rows.length;
                 for (let i = 0; i < len; i++) {
@@ -54,6 +71,18 @@ class HomeScreen extends Component {
             });
         });
         this.props.navigation.navigate('EventDetail');
+    }
+
+    _toggleCalendarDialog = () => {
+        this.setState({ calendarDialogVisible: true })
+    }
+
+    componentDidMount() {
+        this.props.navigation.setParams({
+            toggleCalendarDialog: this._toggleCalendarDialog,
+            currentDate: this.state.currentDate,
+            _refreshSelectedDayEventList: this.refreshSelectedDayEventList
+        })
     }
 
     errorCB(err) {
@@ -87,10 +116,12 @@ class HomeScreen extends Component {
         });
     }
 
-    refreshEventList = (startDate, endDate) => {
+    refreshSelectedDayEventList = (startDate) => {
+        this.props.dispatch({ type: 'RESET_LIST', startDate });
+        let startOfDay = moment(startDate * 1000).startOf('day').unix();
+        let endOfDay = moment(startDate * 1000).endOf('day').unix();
         db.transaction((tx) => {
-            tx.executeSql('SELECT * FROM event', [], (tx, results) => {
-                console.log("Query completed");
+            tx.executeSql('SELECT * FROM event where starttime >= ? and starttime <= ?', [startOfDay, endOfDay], (tx, results) => {
                 let len = results.rows.length;
                 for (let i = 0; i < len; i++) {
                     let row = results.rows.item(i);
@@ -107,30 +138,6 @@ class HomeScreen extends Component {
                 }
             });
         });
-    }
-
-    refreshDayEventList = () => {
-        this.setState({
-            isDaySelected: true,
-            isWeekSelected: false,
-            isMonthSelected: false
-        })
-    }
-
-    refreshWeekEventList = () => {
-        this.setState({
-            isDaySelected: false,
-            isWeekSelected: true,
-            isMonthSelected: false
-        })
-    }
-
-    refreshMonthEventList = () => {
-        this.setState({
-            isDaySelected: false,
-            isWeekSelected: false,
-            isMonthSelected: true
-        })
     }
 
     render() {
@@ -151,7 +158,26 @@ class HomeScreen extends Component {
         })
         return (
             <View style={styles.container}>
-                <Button title="test" onPress={() => {                    
+                <Dialog visible={this.state.calendarDialogVisible}
+                    onTouchOutside={() => { this.setState({ calendarDialogVisible: false }) }}>
+                    <DialogContent>
+                        <Calendar
+                            minDate={'2012-05-10'}
+                            onDayPress={(day) => {
+
+                                this.refreshSelectedDayEventList(day.timestamp / 1000);
+                                this.setState({
+                                    selectedDay: day.timestamp / 1000,
+                                    calendarDialogVisible: false
+                                });
+                            }}
+                            hideExtraDays={true}
+                            monthFormat={'MM yyyy'}
+                            firstDay={1}
+                        />
+                    </DialogContent>
+                </Dialog>
+                <Button title="test" onPress={() => {
                     this.notif.scheduleNotif(5, 3);
                 }}></Button>
                 <View style={styles.eventListView}>
@@ -159,19 +185,25 @@ class HomeScreen extends Component {
                         {eventCardList}
                     </ScrollView>
                 </View>
-                <View style={styles.selectionBar}>
-                    <TouchableOpacity
-                        onPress={this.refreshDayEventList}
-                        style={[styles.selectionCard, this.state.isDaySelected ? styles.active : styles.nonActive]}>
-                        <Text style={this.state.isDaySelected ? styles.active : styles.nonActive}>21</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={this.refreshWeekEventList}
-                        style={[styles.selectionCard, this.state.isWeekSelected ? styles.active : styles.nonActive]}></TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={this.refreshMonthEventList}
-                        style={[styles.selectionCard, this.state.isMonthSelected ? styles.active : styles.nonActive]}></TouchableOpacity>
-                </View>
+                <ActionButton
+                    buttonColor="rgba(231,76,60,1)"
+                    onPress={() => {                        
+                        let action = {
+                            eventId: -1,
+                            eventColor: '#009ae4',
+                            startTime: this.state.selectedDay,
+                            endTime: this.state.selectedDay,
+                            eventTitle: '',
+                            eventDescription: ''
+                        };                        
+                        this.props.dispatch({ type: 'UPDATE_CURRENT', ...action });
+                        this.props.navigation.navigate('EventEdit', {
+                            screenTitle: 'Thêm mới',
+                            selectedDay: this.state.selectedDay
+                        });
+                    }}
+                >
+                </ActionButton>
             </View>
         );
     }
@@ -179,7 +211,7 @@ class HomeScreen extends Component {
 
 function mapStateToProps(state) {
     return {
-        events: state.eventList
+        events: state.selectedDayEventList
     }
 }
 
@@ -216,5 +248,10 @@ const styles = StyleSheet.create({
         color: 'black',
         backgroundColor: '#f3f2f1',
         fontSize: 24,
+    },
+    screenTitle: {
+        color: 'black',
+        fontSize: 30,
+
     }
 });
