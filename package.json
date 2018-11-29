@@ -18,7 +18,7 @@
     "react-native-modal-datetime-picker": "^6.0.0",
     "react-native-popup-dialog": "^0.16.1",
     "react-native-push-notification": "^3.1.2",
-    "react-native-sqlite-storage": "^3.3.7",
+    "react-native-sqlite-storage": "^3.3.8",
     "react-native-vector-icons": "^6.0.2",
     "react-navigation": "^2.18.0",
     "react-redux": "^5.1.0",

@@ -6,7 +6,7 @@ import { Provider } from 'react-redux'
 import { createStackNavigator } from 'react-navigation'
 import { createDrawerNavigator } from 'react-navigation';
 
-import Page2 from './src/containers/page2'
+import WeekScreen from './src/containers/WeekScreen'
 import HomeScreen from './src/containers/HomeScreen'
 import EventDetailScreen from './src/containers/EventDetailScreen';
 import EventCard from './src/components/EventCard'
@@ -21,8 +21,8 @@ export default class App extends Component {
       /* <DateTimePickerTextComponent /> */
       //{/* </View> */}
       <Provider store={store}>
-        <AppStackNavigator />
-        {/* <AppDrawerNavigator /> */}
+        {/* <AppStackNavigator /> */}
+        <AppDrawerNavigator />
       </Provider>
     );
   }
@@ -39,5 +39,5 @@ const AppStackNavigator = createStackNavigator({
 
 const AppDrawerNavigator = createDrawerNavigator({
   HomePage: AppStackNavigator ,
-  Page2: Page2,
+  Week: WeekScreen,
 })
