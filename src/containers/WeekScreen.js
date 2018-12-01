@@ -19,13 +19,34 @@ const items = {
     '2018-03-30': [{ eventId: 'ewfhweufhwif', eventColor: 'gray', startTime: 'eefwefwef', endTime: 'ewoifwoeijfwoief', eventTitle: 'wefjwoeifjwioe', eventDescription: 'ewjoiwjefoiwjeoif' }]
 }
 
+const itemsTemp = [
+    {
+        eventId: 1,
+        eventColor: 'white',
+        startTime: 1543680391,
+        endTime: 1,
+        eventTitle: 1,
+        eventDescription: 1
+    },
+    {
+        eventId: 2,
+        eventColor: 'gray',
+        startTime: 1544022978,
+        endTime: 2,
+        eventTitle: 2,
+        eventDescription: 2
+    }
+]
+
+//const dateTest = moment(1543680391*1000).format('YYYY-MM-DD');
+
 class WeekScreen extends Component {
     constructor(props) {
         super(props);
         this.state = {
             items: {},
             currentDate: `${new Date().getDate()}/${new Date().getMonth() + 1}/${new Date().getFullYear()}`,
-            initialDate: `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`
+            initialDate: `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`,
         };
         if (!eventListLoaded) {
             this.refreshEventColorList();
@@ -39,6 +60,26 @@ class WeekScreen extends Component {
             currentDate: this.state.currentDate,
             _refreshSelectedDayEventList: this.refreshSelectedDayEventList
         })
+
+
+        this.convertItemsToAgenda();
+    }
+
+    convertItemsToAgenda() {
+        let dateTest;
+
+        for (let i = 0; i < itemsTemp.length; i++) {
+            dateTest = moment(itemsTemp[i].startTime * 1000).format('YYYY-MM-DD');
+                items[dateTest] = [];
+                items[dateTest].push({
+                    eventId: itemsTemp[i].eventId,
+                    eventColor: itemsTemp[i].eventColor,
+                    startTime: itemsTemp[i].startTime,
+                    endTime: itemsTemp[i].endTime,
+                    eventTitle: itemsTemp[i].eventTitle,
+                    eventDescription: itemsTemp[i].eventDescription
+                });
+        }
 
         this.setState({
             items: items
@@ -104,20 +145,14 @@ class WeekScreen extends Component {
 
         return (
             <Agenda
-                // items={
-                //     {
-                //         '2018-11-28': [{ text: 'item 1 - any js object', height: 50 }, { text: 'item 1 - any js object', height: 150 }],
-                //         '2018-11-30': [{ text: 'item 3 - any js object', height: 120 }, { text: 'any js object', height: 60 }],
-                //     }}
                 items={this.state.items}
                 loadItemsForMonth={this.loadItems.bind(this)}
                 renderItem={this.renderItem.bind(this)}
                 renderEmptyDate={this.renderEmptyDate.bind(this)}
+                renderEmptyData={this.renderEmptyData.bind(this)}
                 rowHasChanged={this.rowHasChanged.bind(this)}
                 firstDay={1}
                 minDate={'2012-10-05'}
-                selected={this.state.initialDate}
-                pastScrollRange={50}
             />
         );
 
@@ -126,41 +161,30 @@ class WeekScreen extends Component {
 
     loadItems(day) {
         setTimeout(() => {
-            // for (let i = -15; i < 85; i++) {
-            //     const time = day.timestamp + i * 24 * 60 * 60 * 1000;
-            //     const strTime = this.timeToString(time);
-            //     if (!this.state.items[strTime]) {
-            //         this.state.items[strTime] = [];
-            //         const numItems = Math.floor(Math.random() * 5);
-            //         for (let j = 0; j < numItems; j++) {
-            //             this.state.items[strTime].push({
-            //                 name: 'Item for ' + strTime,
-            //                 height: Math.max(50, Math.floor(Math.random() * 150))
-            //             });
-            //         }
-            //     }
-            // }
-            //console.log(this.state.items);
             const newItems = {};
             Object.keys(this.state.items).forEach(key => { newItems[key] = this.state.items[key]; });
             this.setState({
                 items: newItems
             });
         }, 1000);
-        // console.log(`Load Items for ${day.year}-${day.month}`);
-    }
-
-    _OnDayPress(day) {
-
     }
 
     renderItem(item) {
         return (
-            <View style={[styles.item, { height: 'auto' }, {backgroundColor: item.eventColor}]}>
-                <Text>{item.eventTitle}</Text>
+            <View style={[styles.item, { height: 150 }, { backgroundColor: item.eventColor }]}>
+                {/* <Text>{item.eventTitle}</Text>
                 <Text>{item.startTime}</Text>
                 <Text>{item.endTime}</Text>
-                <Text>{item.eventDescription}</Text>
+                <Text>{item.eventDescription}</Text> */}
+                <EventCard
+                    navigation={this.props.navigation}
+                    eventId={item.eventId}
+                    eventColor={item.eventColor}
+                    startTime={item.startTime}
+                    endTime={item.endTime}
+                    eventTitle={item.eventTitle}
+                    eventDescription={item.eventDescription}
+                    cardColor={item.eventColor}></EventCard>
             </View>
         );
     }
@@ -168,6 +192,12 @@ class WeekScreen extends Component {
     renderEmptyDate() {
         return (
             <View style={styles.emptyDate}></View>
+        );
+    }
+
+    renderEmptyData() {
+        return (
+            <View style={[styles.emptyData]}><Text style={[{fontSize: 25}, {color: 'black'}]}>Hôm nay không có sự kiện nào</Text></View>
         );
     }
 
@@ -202,5 +232,18 @@ const styles = StyleSheet.create({
         height: 15,
         flex: 1,
         paddingTop: 30
+    },
+    emptyData: {
+        backgroundColor: 'white',
+        flex: 1,
+        borderRadius: 5,
+        padding: 10,
+        marginRight: 10,
+        marginTop: 17,
+        marginLeft: 10,
+        marginBottom: 17,
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center'
     }
 });
