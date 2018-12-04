@@ -13,7 +13,7 @@ const selectedDayEventList = (state = [], action) => {
                     ? { ...action } : event)
 
         case 'RESET_LIST':
-            state = [];            
+            state = [];
 
         default:
             return state

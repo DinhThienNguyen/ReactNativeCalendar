@@ -53,6 +53,7 @@ class EventEditScreen extends Component {
     }
 
     _addNewEvent = () => {
+        // console.log(this.props.lastEventId);
         if (this.state.eventTitle === '') {
             this.setState({
                 eventTitle: 'Không có tiêu đề'
@@ -73,18 +74,18 @@ class EventEditScreen extends Component {
                     this.state.eventDescription,
                 ], (tx, results) => {                    
                 });
-            // tx.executeSql('SELECT id FROM event ORDER BY id DESC', [], (tx, results) => {
-            //     let row = results.rows.item(0);
-            //     lastEventId = row.id;
-            //     console.log(lastEventId);
-            // });
+            tx.executeSql('SELECT id FROM event ORDER BY id DESC', [], (tx, results) => {
+                let row = results.rows.item(0);
+                lastEventId = row.id;
+                console.log(lastEventId);
+            });
         });
         let selectedDay = moment(this.props.navigation.getParam('selectedDay', 0) * 1000).startOf('day');
         let startDate = moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").startOf('day');
         if (Number(selectedDay) === Number(startDate)) {
             let event = {
                 eventId: this.props.lastEventId + 1,
-                eventColor: this.state.eventColor,
+                eventColor: this.state.eventColor.hex,
                 startTime: moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
                 endTime: moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
                 eventTitle: this.state.eventTitle,

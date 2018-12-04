@@ -14,14 +14,14 @@ var db = SQLite.openDatabase({ name: 'calendarr.db', createFromLocation: '~calen
 
 var eventListLoaded = false;
 
-const items = {
-    '2018-11-30': [{ eventId: 'ewfhweufhwif', eventColor: 'white', startTime: 'eefwefwef', endTime: 'ewoifwoeijfwoief', eventTitle: 'wefjwoeifjwioe', eventDescription: 'ewjoiwjefoiwjeoif' }],
-    '2018-03-30': [{ eventId: 'ewfhweufhwif', eventColor: 'gray', startTime: 'eefwefwef', endTime: 'ewoifwoeijfwoief', eventTitle: 'wefjwoeifjwioe', eventDescription: 'ewjoiwjefoiwjeoif' }]
+let items = {
+    // '2018-11-30': [{ eventId: 'ewfhweufhwif', eventColor: 'white', startTime: 'eefwefwef', endTime: 'ewoifwoeijfwoief', eventTitle: 'wefjwoeifjwioe', eventDescription: 'ewjoiwjefoiwjeoif' }],
+    // '2018-03-30': [{ eventId: 'ewfhweufhwif', eventColor: 'gray', startTime: 'eefwefwef', endTime: 'ewoifwoeijfwoief', eventTitle: 'wefjwoeifjwioe', eventDescription: 'ewjoiwjefoiwjeoif' }]
 }
 
-const itemsTemp = [
+let itemsTemp = [
     {
-        eventId: 1,
+        eventId: 99,
         eventColor: 'white',
         startTime: 1543680391,
         endTime: 1,
@@ -29,10 +29,10 @@ const itemsTemp = [
         eventDescription: 1
     },
     {
-        eventId: 2,
+        eventId: 100,
         eventColor: 'gray',
-        startTime: 1544022978,
-        endTime: 2,
+        startTime: 1540227600,
+        endTime: 1540227600,
         eventTitle: 2,
         eventDescription: 2
     }
@@ -45,15 +45,21 @@ class WeekScreen extends Component {
         super(props);
         this.state = {
             items: {},
+            eventList: [],
             currentDate: `${new Date().getDate()}/${new Date().getMonth() + 1}/${new Date().getFullYear()}`,
             initialDate: `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`,
         };
         if (!eventListLoaded) {
-            this.refreshEventColorList();
-            this.refreshSelectedDayEventList(moment().unix());
+            // this.refreshEventColorList();
+            // this.refreshSelectedDayEventList(moment().unix());
+            this.getAllEvents();
             eventListLoaded = true;
         }
     }
+
+    // componentWillMount() {
+    //     this.getAllEvents();
+    // }
 
     componentDidMount() {
         this.props.navigation.setParams({
@@ -61,24 +67,53 @@ class WeekScreen extends Component {
             _refreshSelectedDayEventList: this.refreshSelectedDayEventList
         })
 
+        // if (!items['2018-12-04']) {
+        //     items['2018-12-04'] = [];
+        // }
+        // items['2018-12-04'] = [];
+        // items['2018-12-04'].push({
+        //     eventId: 123,
+        //     eventColor: 'red',
+        //     startTime: 1543907243,
+        //     endTime: 1543907243,
+        //     eventTitle: 'fewfwef',
+        //     eventDescription: 'wefwefew'
+        // });
 
+        // items['2018-12-03'] = [];
+        // items['2018-12-03'].push({
+        //     eventId: 123,
+        //     eventColor: 'red',
+        //     startTime: 1543907243,
+        //     endTime: 1543907243,
+        //     eventTitle: 'fewfwef',
+        //     eventDescription: 'wefwefew'
+        // });
         this.convertItemsToAgenda();
     }
 
     convertItemsToAgenda() {
         let dateTest;
 
-        for (let i = 0; i < itemsTemp.length; i++) {
-            dateTest = moment(itemsTemp[i].startTime * 1000).format('YYYY-MM-DD');
-                items[dateTest] = [];
-                items[dateTest].push({
-                    eventId: itemsTemp[i].eventId,
-                    eventColor: itemsTemp[i].eventColor,
-                    startTime: itemsTemp[i].startTime,
-                    endTime: itemsTemp[i].endTime,
-                    eventTitle: itemsTemp[i].eventTitle,
-                    eventDescription: itemsTemp[i].eventDescription
-                });
+        // console.log("lenght" + itemsTemp.length);
+
+        console.log("lenght:   "+this.state.eventList.length);
+
+        for (let i = 0; i < this.state.eventList.length; i++) {
+            dateTest = moment(this.state.eventList[i].startTime * 1000).format('YYYY-MM-DD');
+            console.log(dateTest);
+            // if (!items[dateTest]) {
+            //     items[dateTest] = [];
+            // }
+            items[`${dateTest}`] = [];
+            items[`${dateTest}`].push({
+                eventId: itemsTemp[i].eventId,
+                eventColor: itemsTemp[i].eventColor,
+                startTime: itemsTemp[i].startTime,
+                endTime: itemsTemp[i].endTime,
+                eventTitle: itemsTemp[i].eventTitle,
+                eventDescription: itemsTemp[i].eventDescription
+            });
         }
 
         this.setState({
@@ -141,6 +176,37 @@ class WeekScreen extends Component {
         });
     }
 
+    getAllEvents = () => {
+        // this.props.dispatch({ type: 'RESET_LIST' });
+        // let startOfDay = moment(startDate * 1000).startOf('day').unix();
+        // let endOfDay = moment(startDate * 1000).endOf('day').unix();
+        db.transaction((tx) => {
+            tx.executeSql('SELECT * FROM event', [], (tx, results) => {
+                let len = results.rows.length;
+                for (let i = 0; i < len; i++) {
+                    let row = results.rows.item(i);
+                    let event = {
+                        eventId: row.id,
+                        eventColor: row.color_hexid,
+                        startTime: row.starttime,
+                        endTime: row.endtime,
+                        eventTitle: row.title,
+                        eventDescription: row.description
+                    }
+
+                    // this.props.dispatch({ type: 'ADD_EVENT', ...event });
+
+                    // this.setState({
+                    //     eventList: [...eventList, event]
+                    // })
+                    console.log("eventList getAll :   \n\n\n\n"+ this.state.eventList.length);
+                    // itemsTemp.push(event);
+                }
+                // console.log("done get event");
+            });
+        });
+    }
+
     render() {
 
         return (
@@ -160,13 +226,13 @@ class WeekScreen extends Component {
     }
 
     loadItems(day) {
-        setTimeout(() => {
-            const newItems = {};
-            Object.keys(this.state.items).forEach(key => { newItems[key] = this.state.items[key]; });
-            this.setState({
-                items: newItems
-            });
-        }, 1000);
+        // setTimeout(() => {
+        //     const newItems = {};
+        //     Object.keys(this.state.items).forEach(key => { newItems[key] = this.state.items[key]; });
+        //     this.setState({
+        //         items: newItems
+        //     });
+        // }, 1000);
     }
 
     renderItem(item) {
@@ -197,7 +263,7 @@ class WeekScreen extends Component {
 
     renderEmptyData() {
         return (
-            <View style={[styles.emptyData]}><Text style={[{fontSize: 25}, {color: 'black'}]}>Hôm nay không có sự kiện nào</Text></View>
+            <View style={[styles.emptyData]}><Text style={[{ fontSize: 25 }, { color: 'black' }]}>Hôm nay không có sự kiện nào</Text></View>
         );
     }
 

@@ -1,8 +1,9 @@
 const lastEventId = (state = [], action) => {
     switch (action.type) {
         case "UPDATE_LAST_ID":
-            state = action;
-
+            // console.log(action);
+            state = action.lastEventId;
+            // console.log(action.lastEventId);
         default:
             return state
     }

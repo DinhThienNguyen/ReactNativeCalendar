@@ -184,7 +184,8 @@ class HomeScreen extends Component {
                     </DialogContent>
                 </Dialog>
                 <Button title="test" onPress={() => {
-                    this.notif.scheduleNotif(5, 3);
+                    // this.notif.scheduleNotif(5, 3);
+                    console.log(this.props.events.length);
                 }}></Button>
                 <View style={styles.eventListView}>
                     <ScrollView>
