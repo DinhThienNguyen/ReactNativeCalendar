@@ -137,6 +137,12 @@ class HomeScreen extends Component {
                     this.props.dispatch({ type: 'ADD_EVENT', ...event });
                 }
             });
+            tx.executeSql('SELECT id FROM event ORDER BY id DESC', [], (tx, results) => {
+                let row = results.rows.item(0);
+                let lastEventId = row.id;
+                this.props.dispatch({ type: 'UPDATE_LAST_ID', lastEventId });
+                console.log(lastEventId);
+            });
         });
     }
 
@@ -187,7 +193,7 @@ class HomeScreen extends Component {
                 </View>
                 <ActionButton
                     buttonColor="rgba(231,76,60,1)"
-                    onPress={() => {                        
+                    onPress={() => {
                         let action = {
                             eventId: -1,
                             eventColor: '#009ae4',
@@ -195,7 +201,7 @@ class HomeScreen extends Component {
                             endTime: this.state.selectedDay,
                             eventTitle: '',
                             eventDescription: ''
-                        };                        
+                        };
                         this.props.dispatch({ type: 'UPDATE_CURRENT', ...action });
                         this.props.navigation.navigate('EventEdit', {
                             screenTitle: 'Thêm mới',

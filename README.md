@@ -1,9 +1,20 @@
+<p align="center">
+    <img alt="awesome" src="promo/promo.png" width="480" />
+</p>
+
+Well look no further because our app will help you with that!
+
 ## Installation
 
 To set up and start using our project, open up your terminal and run this command:
 ```
 npm install
 ```
+
+## Features
+* Manage events with ease
+* Receive notifications for events
+* Customizable
 
 ## Credits
 

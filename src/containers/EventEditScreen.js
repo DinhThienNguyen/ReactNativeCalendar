@@ -53,37 +53,37 @@ class EventEditScreen extends Component {
     }
 
     _addNewEvent = () => {
-        let lastEventId = -1;
-        if(this.state.eventTitle === ''){
+        if (this.state.eventTitle === '') {
             this.setState({
                 eventTitle: 'Không có tiêu đề'
             })
         }
-        if(this.state.eventDescription === ''){
+        if (this.state.eventDescription === '') {
             this.setState({
                 eventDescription: 'Không có mô tả'
             })
         }
         db.transaction((tx) => {
-            // tx.executeSql('INSERT INTO event(color_hexid, starttime, endtime, title, description) values(?,?,?,?,?)',
-            //     [
-            //         this.state.eventColor.hex,
-            //         moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
-            //         moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
-            //         this.state.eventTitle,
-            //         this.state.eventDescription,
-            //     ], (tx, results) => {                    
-            //     });
-            tx.executeSql('SELECT id FROM event ORDER BY id DESC', [], (tx, results) => {
-                    lastEventId = results.id;
-                    console.log(lastEventId);
+            tx.executeSql('INSERT INTO event(color_hexid, starttime, endtime, title, description) values(?,?,?,?,?)',
+                [
+                    this.state.eventColor.hex,
+                    moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
+                    moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
+                    this.state.eventTitle,
+                    this.state.eventDescription,
+                ], (tx, results) => {                    
                 });
+            // tx.executeSql('SELECT id FROM event ORDER BY id DESC', [], (tx, results) => {
+            //     let row = results.rows.item(0);
+            //     lastEventId = row.id;
+            //     console.log(lastEventId);
+            // });
         });
         let selectedDay = moment(this.props.navigation.getParam('selectedDay', 0) * 1000).startOf('day');
         let startDate = moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").startOf('day');
         if (Number(selectedDay) === Number(startDate)) {
             let event = {
-                eventId: lastEventId,
+                eventId: this.props.lastEventId + 1,
                 eventColor: this.state.eventColor,
                 startTime: moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
                 endTime: moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
@@ -91,7 +91,7 @@ class EventEditScreen extends Component {
                 eventDescription: this.state.eventDescription
             };
 
-            console.log("update store: " + event);
+            // console.log("update store: " + event);
 
             this.props.dispatch({ type: 'ADD_EVENT', ...event });
         }
@@ -264,7 +264,8 @@ function mapStateToProps(state) {
         endTime: state.currentSelectedEvent.endTime,
         eventTitle: state.currentSelectedEvent.eventTitle,
         eventDescription: state.currentSelectedEvent.eventDescription,
-        eventColorList: state.eventColorList
+        eventColorList: state.eventColorList,
+        lastEventId: state.lastEventId
     }
 }
 
