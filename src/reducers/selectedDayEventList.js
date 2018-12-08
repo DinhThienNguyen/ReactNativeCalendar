@@ -1,7 +1,7 @@
 const selectedDayEventList = (state = [], action) => {
     switch (action.type) {
         case 'ADD_EVENT':
-            console.log(action);
+            // console.log(action);
             return [
                 ...state,
                 action

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, Button, ToastAndroid, ScrollView, Alert } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Button, ScrollView } from 'react-native';
 import EventCard from '../components/EventCard'
 import Dialog, { DialogContent } from 'react-native-popup-dialog';
 import { Calendar } from 'react-native-calendars';
@@ -141,7 +141,7 @@ class HomeScreen extends Component {
                 let row = results.rows.item(0);
                 let lastEventId = row.id;
                 this.props.dispatch({ type: 'UPDATE_LAST_ID', lastEventId });
-                console.log(lastEventId);
+                // console.log(lastEventId);
             });
         });
     }
@@ -157,8 +157,7 @@ class HomeScreen extends Component {
                         startTime={item.startTime}
                         endTime={item.endTime}
                         eventTitle={item.eventTitle}
-                        eventDescription={item.eventDescription}
-                        cardColor={item.eventColor}></EventCard>
+                        eventDescription={item.eventDescription}></EventCard>
                 </View>
             );
         })

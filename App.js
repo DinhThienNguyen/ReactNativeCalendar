@@ -21,8 +21,8 @@ export default class App extends Component {
       /* <DateTimePickerTextComponent /> */
       //{/* </View> */}
       <Provider store={store}>
-        {/* <AppStackNavigator /> */}
-        <AppDrawerNavigator />
+        <AppStackNavigator />
+        {/* <AppDrawerNavigator /> */}
       </Provider>
     );
   }
@@ -30,7 +30,8 @@ export default class App extends Component {
 
 
 const AppStackNavigator = createStackNavigator({
-  Home: HomeScreen,
+  // Home: HomeScreen,
+  Week: WeekScreen,
   EventDetail: EventDetailScreen,
   EventCard: EventCard,
   EventEdit: EventEditScreen
