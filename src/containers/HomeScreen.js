@@ -8,6 +8,7 @@ import moment from 'moment';
 import Icon from 'react-native-vector-icons/Ionicons'
 import NotifService from '../components/NotifService';
 import { connect } from "react-redux";
+import {LocaleConfig} from 'react-native-calendars';
 
 var SQLite = require('react-native-sqlite-storage');
 var db = SQLite.openDatabase({ name: 'calendarr.db', createFromLocation: '~calendar.db' }, this.openCB, this.errorCB);
@@ -220,6 +221,17 @@ function mapStateToProps(state) {
         events: state.selectedDayEventList
     }
 }
+
+LocaleConfig.locales['vn'] = {
+    monthNames: ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
+                'Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'],
+    monthNamesShort: ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
+                    'Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'],
+    dayNames: ['Chủ nhật','Thứ hai','Thứ ba','Thứ tư','Thứ năm','Thứ sáu','Thứ bảy'],
+    dayNamesShort: ['CN.','T2.','T3.','T4.','T5.','T6.','T7.']
+  };
+
+LocaleConfig.defaultLocale = 'vn';
 
 export default connect(mapStateToProps)(HomeScreen);
 
