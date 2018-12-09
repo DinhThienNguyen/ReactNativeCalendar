@@ -70,7 +70,7 @@ class EventDetailScreen extends Component {
                     <View style={{ flexDirection: 'row' }}>
                         <View style={{ flex: 2 }}></View>
                         <View style={{ flex: 8 }}>
-                            <Text style={{ fontSize: 28, color: '#ffffff', marginBottom: 20 }}>{this.props.eventTitle}</Text>
+                            <Text style={{ fontSize: 28, color: '#ffffff', marginBottom: 20 }}>{this.props.eventTitle === '' ? "Không có tiêu đề" : this.props.eventTitle}</Text>
                         </View>
                     </View>
                 </View>
@@ -114,7 +114,7 @@ class EventDetailScreen extends Component {
                         </View>
                         <View style={{ flex: 8, justifyContent: 'center' }}>
                             <ScrollView>
-                                <Text style={styles.detailText}>{this.props.eventDescription}</Text>
+                                <Text style={styles.detailText}>{this.props.eventDescription === '' ? "không có miêu tả" : this.props.eventDescription}</Text>
                             </ScrollView>
                         </View>
                     </View>

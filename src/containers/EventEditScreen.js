@@ -5,6 +5,7 @@ import Dialog, { DialogContent } from 'react-native-popup-dialog';
 import DatePicker from 'react-native-datepicker'
 import { NavigationActions } from 'react-navigation';
 import moment from 'moment';
+import DBHelper from '../components/DBHelper'
 import { connect } from "react-redux";
 
 var SQLite = require('react-native-sqlite-storage');
@@ -50,67 +51,64 @@ class EventEditScreen extends Component {
             eventTitle: this.props.eventTitle,
             eventDescription: this.props.eventDescription
         };
+
+        this.DBHelperService = new DBHelper();
     }
 
     _addNewEvent = () => {
-        // console.log(this.props.lastEventId);
-        if (this.state.eventTitle === '') {
-            this.setState({
-                eventTitle: 'Không có tiêu đề'
-            })
-        }
-        if (this.state.eventDescription === '') {
-            this.setState({
-                eventDescription: 'Không có mô tả'
-            })
-        }
-        db.transaction((tx) => {
-            tx.executeSql('INSERT INTO event(color_hexid, starttime, endtime, title, description) values(?,?,?,?,?)',
-                [
-                    this.state.eventColor.hex,
-                    moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
-                    moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
-                    this.state.eventTitle,
-                    this.state.eventDescription,
-                ], (tx, results) => {                    
-                });
-            tx.executeSql('SELECT id FROM event ORDER BY id DESC', [], (tx, results) => {
-                let row = results.rows.item(0);
-                lastEventId = row.id;
-                console.log(lastEventId);
-            });
-        });
-        let selectedDay = moment(this.props.navigation.getParam('selectedDay', 0) * 1000).startOf('day');
-        let startDate = moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").startOf('day');
-        if (Number(selectedDay) === Number(startDate)) {
-            let event = {
-                eventId: this.props.lastEventId + 1,
-                eventColor: this.state.eventColor.hex,
-                startTime: moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
-                endTime: moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
-                eventTitle: this.state.eventTitle,
-                eventDescription: this.state.eventDescription
-            };
+        let event = {
+            eventId: this.props.latestEventId + 1,
+            eventColor: this.state.eventColor.hex,
+            startTime: moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
+            endTime: moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
+            eventTitle: this.state.eventTitle,
+            eventDescription: this.state.eventDescription
+        };
 
-            // console.log("update store: " + event);
-
-            this.props.dispatch({ type: 'ADD_EVENT', ...event });
+        if (event.eventTitle === '') {
+            event.eventTitle = "Không có tiêu đề";
         }
+        if (event.eventDescription === '') {
+            event.eventDescription = "Không có mô tả";
+        }
+
+        this.DBHelperService.addEvent(event);
+
+        let latestEventId = event.eventId + 1;
+        this.props.dispatch({ type: 'UPDATE_LAST_ID', latestEventId });
+
+        let dayEventList = this.props.monthEventList;
+        let dateString = moment(event.startTime * 1000).format('YYYY-MM-DD');
+        if (!dayEventList[dateString]) {
+            dayEventList[dateString] = [];
+        }
+        dayEventList[dateString] = [...dayEventList[dateString], event];
+        this.props.dispatch({ type: 'UPDATE_LIST', dayEventList });
     }
 
     _updateEvent = () => {
-        db.transaction((tx) => {
-            tx.executeSql('UPDATE event set color_hexid = ?, starttime = ?, endtime = ?, title = ?, description = ? WHERE id = ?',
-                [
-                    this.state.eventColor.hex,
-                    moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
-                    moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
-                    this.state.eventTitle,
-                    this.state.eventDescription,
-                    this.props.eventId,
-                ], (tx, results) => {
-                });
-        });
+        let event = {
+            eventId: this.props.eventId,
+            eventColor: this.state.eventColor.hex,
+            startTime: moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
+            endTime: moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
+            eventTitle: this.state.eventTitle,
+            eventDescription: this.state.eventDescription,
+        };
+        if (event.eventTitle === '') {
+            event.eventTitle = "Không có tiêu đề";
+        }
+        if (event.eventDescription === '') {
+            event.eventDescription = "Không có mô tả";
+        }
+        this.DBHelperService.updateEvent(event);
+
+        let dayEventList = this.props.monthEventList;
+        let dateString = moment(event.startTime * 1000).format('YYYY-MM-DD');
+        let tempEventList = dayEventList[dateString];
+        tempEventList = tempEventList.map(events => (events.eventId === event.eventId) ? { ...event } : events);
+        dayEventList[dateString] = tempEventList;
+        this.props.dispatch({ type: 'UPDATE_LIST', dayEventList });
     }
 
     componentDidMount() {
@@ -133,7 +131,6 @@ class EventEditScreen extends Component {
         };
 
         this.props.dispatch({ type: 'UPDATE_CURRENT', ...action });
-        this.props.dispatch({ type: 'UPDATE_EVENT', ...action });
     }
 
     render() {
@@ -266,7 +263,8 @@ function mapStateToProps(state) {
         eventTitle: state.currentSelectedEvent.eventTitle,
         eventDescription: state.currentSelectedEvent.eventDescription,
         eventColorList: state.eventColorList,
-        lastEventId: state.lastEventId
+        latestEventId: state.latestEventId,
+        monthEventList: state.selectedMonthEventList
     }
 }
 

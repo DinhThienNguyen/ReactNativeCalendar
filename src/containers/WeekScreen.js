@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Button } from 'react-native';
 import { Agenda } from 'react-native-calendars';
 import EventCard from '../components/EventCard';
 import moment from 'moment';
 import { connect } from "react-redux";
 import ActionButton from 'react-native-action-button';
 import Icon from 'react-native-vector-icons/Ionicons'
+import DBHelper from '../components/DBHelper'
 
-var SQLite = require('react-native-sqlite-storage');
-var db = SQLite.openDatabase({ name: 'calendarr.db', createFromLocation: '~calendar.db' }, this.openCB, this.errorCB);
+var eventColorListLoaded = false;
 
 class WeekScreen extends Component {
 
@@ -31,13 +31,19 @@ class WeekScreen extends Component {
         };
     };
 
-    constructor(props) {
+    constructor(props) {        
         super(props);
-        this.state = {
-            items: {},
-            eventList: [],
+        this.state = {            
+            selectedDay: moment().unix(),
             initialDate: `${moment().format('YYYY-MM-DD')}`,
+            selectedMonth: -1,
         };
+        this.DBHelperService = new DBHelper();
+        if (!eventColorListLoaded) {
+            this.refreshEventColorList();
+            this.refreshLatestEventId();
+            eventColorListLoaded = true;
+        }
     }
 
 
@@ -49,102 +55,80 @@ class WeekScreen extends Component {
 
     showCurrentDateEvent = () => {
         this.setState({
-            initialDate: `${moment().format('YYYY-MM-DD')}`,
+            selectedDay: moment().unix(),
         })
     }
 
-    getAllEventsIn2Months = (time) => {
-        console.log("\n\n\n\n");
-        console.log(time);
-        let monthEventList = [];
-        let startOfMonth = moment().set({ 'year': time.year, 'month': (time.month - 1) }).startOf('month').unix();
-        let endOfMonth = moment().set({ 'year': time.year, 'month': (time.month) }).endOf('month').unix();
-        console.log(startOfMonth);
-        console.log(endOfMonth);
-        db.transaction((tx) => {
-            tx.executeSql('SELECT * FROM event where starttime >= ? and starttime <= ? ORDER BY starttime ASC', [startOfMonth, endOfMonth], (tx, results) => {
-                let len = results.rows.length;
-                console.log(len);
-                for (let i = 0; i < len; i++) {
-                    let row = results.rows.item(i);
-                    let event = {
-                        eventId: row.id,
-                        eventColor: row.color_hexid,
-                        startTime: row.starttime,
-                        endTime: row.endtime,
-                        eventTitle: row.title,
-                        eventDescription: row.description
-                    }
-                    monthEventList = [...monthEventList, event];
-                }
-                this.setState({
-                    eventList: monthEventList,
-                });
-                this.convertItemsToAgenda();
-            });
-        });
+    async refreshLatestEventId() {
+        let latestEventId = await this.DBHelperService.getLatestEventId();        
+        this.props.dispatch({ type: 'UPDATE_LAST_ID', latestEventId });
     }
 
-    convertItemsToAgenda() {
+    async refreshEventColorList() {
+        let eventColorList = await this.DBHelperService.getEventColorList();
+        this.props.dispatch({ type: 'UPDATE_COLOR_LIST', eventColorList });
+    }
+
+    async getAllEventsIn2Months(time) {
+        if (this.state.selectedMonth !== time.month) {
+
+            this.setState({
+                selectedMonth: time.month,
+            });
+            let startOfMonth = moment().set({ 'year': time.year, 'month': (time.month - 1) }).startOf('month').unix();
+            let endOfMonth = moment().set({ 'year': time.year, 'month': (time.month) }).endOf('month').unix();
+            let monthEventList = await this.DBHelperService.getEventList(startOfMonth, endOfMonth);
+            this.convertItemsToAgenda(monthEventList);
+        }
+    }
+
+    convertItemsToAgenda(monthEventList) {
         let dayEventList = {};
-        for (let i = 0; i < this.state.eventList.length; i++) {
-            let date = moment(this.state.eventList[i].startTime * 1000).format('YYYY-MM-DD');
+        for (let i = 0; i < monthEventList.length; i++) {
+            let date = moment(monthEventList[i].startTime * 1000).format('YYYY-MM-DD');
             if (!dayEventList[date]) {
                 dayEventList[date] = [];
             }
-            dayEventList[date] = [...dayEventList[date], this.state.eventList[i]];
+            dayEventList[date] = [...dayEventList[date], monthEventList[i]];
         }
-
-        this.setState({
-            items: dayEventList
-        })
-    }
-
-    errorCB(err) {
-        // console.log("SQL Error: " + err);
-    }
-
-    successCB() {
-        // console.log("SQL executed fine");
-    }
-
-    openCB() {
-        // console.log("Database OPENED");
+        this.props.dispatch({ type: 'UPDATE_LIST', dayEventList });
     }
 
     render() {
 
         return (
             <View style={styles.container}>
+                <Button title="test" onPress={() => { console.log(this.state.selectedDay) }}></Button>
                 <Agenda
-                    items={this.state.items}
+                    items={this.props.monthEventList}
                     loadItemsForMonth={(month) => { this.getAllEventsIn2Months(month); }}
                     renderItem={this.renderItem.bind(this)}
-                    onDayPress={(day) => { this.setState({ initialDate: `${day.year}-${day.month}-${day.day}` }) }}
+                    onDayPress={(day) => { this.setState({ selectedDay: day.timestamp / 1000 }) }}
                     renderEmptyDate={this.renderEmptyDate.bind(this)}
                     renderEmptyData={this.renderEmptyData.bind(this)}
                     rowHasChanged={this.rowHasChanged.bind(this)}
-                    selected={this.state.initialDate}
+                    selected={moment(this.state.selectedDay * 1000).format('YYYY-MM-DD')}
                     firstDay={1}
-                    refreshing={true}
+                    // refreshing={true}
                     minDate={'2012-10-05'}
+
                 />
                 <ActionButton
                     buttonColor="rgba(231,76,60,1)"
                     onPress={() => {
-                        // let action = {
-                        //     eventId: -1,
-                        //     eventColor: '#009ae4',
-                        //     startTime: this.state.selectedDay,
-                        //     endTime: this.state.selectedDay,
-                        //     eventTitle: '',
-                        //     eventDescription: ''
-                        // };
-                        // this.props.dispatch({ type: 'UPDATE_CURRENT', ...action });
-                        // this.props.navigation.navigate('EventEdit', {
-                        //     screenTitle: 'Thêm mới',
-                        //     selectedDay: this.state.selectedDay
-                        // });
+                        let action = {
+                            eventId: -1,
+                            eventColor: '#009ae4',
+                            startTime: this.state.selectedDay,
+                            endTime: this.state.selectedDay,
+                            eventTitle: '',
+                            eventDescription: ''
+                        };
+                        this.props.dispatch({ type: 'UPDATE_CURRENT', ...action });
+                        this.props.navigation.navigate('EventEdit', {
+                            screenTitle: 'Thêm mới',
+                            // selectedDay: this.state.selectedDay
+                        });
                     }}
                 >
                 </ActionButton>
@@ -184,13 +168,17 @@ class WeekScreen extends Component {
     }
 
     rowHasChanged(r1, r2) {
-        return r1.name !== r2.name;
+        return r1.eventTitle !== r2.eventTitle ||
+            r1.eventColor !== r2.eventColor ||
+            r1.startTime !== r2.startTime ||
+            r1.endTime !== r2.endTime ||
+            r1.eventDescription !== r2.eventDescription;
     }
 }
 
 function mapStateToProps(state) {
     return {
-        events: state.selectedDayEventList
+        monthEventList: state.selectedMonthEventList
     }
 }
 

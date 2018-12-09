@@ -1,11 +1,9 @@
 const eventColorList = (state = [], action) => {
     switch (action.type) {
-        case 'ADD_COLOR':
+        case 'UPDATE_COLOR_LIST':
             // console.log(action);
-            return [
-                ...state,
-                action
-            ]
+            // console.log(action);
+            return state = action.eventColorList;
 
         default:
             return state

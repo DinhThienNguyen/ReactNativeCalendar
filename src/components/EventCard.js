@@ -76,7 +76,7 @@ class EventCard extends Component {
                     this.props.navigation.navigate('EventDetail');
                 }} >
 
-                    <Text style={styles.title}>{this.props.eventTitle}</Text>
+                    <Text style={styles.title}>{this.props.eventTitle === '' ? "Không có tiêu đề" : this.props.eventTitle}</Text>
                     <Text style={styles.detailText}>
                         {this.isEventOnlyToday(this.props.startTime, this.props.endTime) ? 'Hôm nay' : this.convertMillisToDateString(this.props.startTime) + " -"}
                     </Text>
