@@ -7,9 +7,11 @@ import { connect } from "react-redux";
 import ActionButton from 'react-native-action-button';
 import Icon from 'react-native-vector-icons/Ionicons'
 import DBHelper from '../components/DBHelper'
+import NotifService from '../components/NotifService'
 
 var eventColorListLoaded = false;
-
+var SQLite = require('react-native-sqlite-storage');
+var db = SQLite.openDatabase({ name: 'calendarr.db', createFromLocation: '~calendar.db' }, this.openCB, this.errorCB);
 class WeekScreen extends Component {
 
     static navigationOptions = ({ navigation }) => {
@@ -31,17 +33,20 @@ class WeekScreen extends Component {
         };
     };
 
-    constructor(props) {        
+    constructor(props) {
         super(props);
-        this.state = {            
+        this.state = {
             selectedDay: moment().unix(),
             initialDate: `${moment().format('YYYY-MM-DD')}`,
             selectedMonth: -1,
         };
         this.DBHelperService = new DBHelper();
+        this.notif = new NotifService(this.onNotif.bind(this));
+        this.props.dispatch({ type: 'UPDATE_NOTIF_SERVICE', notifService: this.notif });
         if (!eventColorListLoaded) {
             this.refreshEventColorList();
             this.refreshLatestEventId();
+            this.refreshLatestEventNotifyId();
             eventColorListLoaded = true;
         }
     }
@@ -53,6 +58,35 @@ class WeekScreen extends Component {
         })
     }
 
+    onNotif(notif) {
+        console.log(notif);
+        // let event = await this.DBHelperService.getEventById(notif.id);
+        // console.log(event);
+        // this.props.dispatch({ type: 'UPDATE_CURRENT', ...event });
+        // this.props.navigation.navigate('EventDetail');
+        // db.transaction((tx) => {
+        //     tx.executeSql('SELECT * FROM event where id = ?', [notif.number], (tx, results) => {
+
+        //         let len = results.rows.length;
+        //         for (let i = 0; i < len; i++) {
+        //             let row = results.rows.item(i);
+        //             let event = {
+        //                 eventId: row.id,
+        //                 eventColor: row.color_hexid,
+        //                 startTime: row.starttime,
+        //                 endTime: row.endtime,
+        //                 eventTitle: row.title,
+        //                 eventDescription: row.description
+        //             }
+        //             // console.log(event);
+        //             this.props.dispatch({ type: 'UPDATE_CURRENT', ...event });
+
+        //         }
+        //     });
+        // });
+        // this.props.navigation.navigate('EventDetail');
+    }
+
     showCurrentDateEvent = () => {
         this.setState({
             selectedDay: moment().unix(),
@@ -60,8 +94,13 @@ class WeekScreen extends Component {
     }
 
     async refreshLatestEventId() {
-        let latestEventId = await this.DBHelperService.getLatestEventId();        
+        let latestEventId = await this.DBHelperService.getLatestEventId();
         this.props.dispatch({ type: 'UPDATE_LAST_ID', latestEventId });
+    }
+
+    async refreshLatestEventNotifyId() {
+        let latestEventNotifyId = await this.DBHelperService.getLatestEventNotifyId();
+        this.props.dispatch({ type: 'UPDATE_LAST_EVENT_NOTIFY_ID', latestEventNotifyId });
     }
 
     async refreshEventColorList() {
@@ -91,14 +130,13 @@ class WeekScreen extends Component {
             }
             dayEventList[date] = [...dayEventList[date], monthEventList[i]];
         }
-        this.props.dispatch({ type: 'UPDATE_LIST', dayEventList });
+        this.props.dispatch({ type: 'UPDATE_LIST', dayEventList: dayEventList });
     }
 
     render() {
 
         return (
-            <View style={styles.container}>
-                <Button title="test" onPress={() => { console.log(this.state.selectedDay) }}></Button>
+            <View style={styles.container}>                
                 <Agenda
                     items={this.props.monthEventList}
                     loadItemsForMonth={(month) => { this.getAllEventsIn2Months(month); }}
@@ -111,6 +149,7 @@ class WeekScreen extends Component {
                     firstDay={1}
                     // refreshing={true}
                     minDate={'2012-10-05'}
+                    onCalendarToggled={(calendarOpened) => {console.log(calendarOpened)}}
 
                 />
                 <ActionButton
@@ -124,7 +163,7 @@ class WeekScreen extends Component {
                             eventTitle: '',
                             eventDescription: ''
                         };
-                        this.props.dispatch({ type: 'UPDATE_CURRENT', ...action });
+                        this.props.dispatch({ type: 'UPDATE_CURRENT', event: action });
                         this.props.navigation.navigate('EventEdit', {
                             screenTitle: 'Thêm mới',
                             // selectedDay: this.state.selectedDay
@@ -150,7 +189,8 @@ class WeekScreen extends Component {
                     startTime={item.startTime}
                     endTime={item.endTime}
                     eventTitle={item.eventTitle}
-                    eventDescription={item.eventDescription}></EventCard>
+                    eventDescription={item.eventDescription}
+                    notifyTime={item.notifyTime}></EventCard>
             </View>
         );
     }
@@ -172,7 +212,13 @@ class WeekScreen extends Component {
             r1.eventColor !== r2.eventColor ||
             r1.startTime !== r2.startTime ||
             r1.endTime !== r2.endTime ||
-            r1.eventDescription !== r2.eventDescription;
+            r1.eventDescription !== r2.eventDescription;        
+    }
+
+    compareNotifyTimeList(l1, l2) {
+        for (let i = 0; i < l1.length; i++) {
+            return l1[i].notifyId !== l2[i].notifyId || l1[i].eventId !== l2[i].eventId || l1[i].notifyTime !== l2[i].notifyTime
+        }
     }
 }
 

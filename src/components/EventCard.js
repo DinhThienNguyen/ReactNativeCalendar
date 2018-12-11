@@ -62,10 +62,11 @@ class EventCard extends Component {
             startTime: this.props.startTime,
             endTime: this.props.endTime,
             eventTitle: this.props.eventTitle,
-            eventDescription: this.props.eventDescription
+            eventDescription: this.props.eventDescription,
+            notifyTime: this.props.notifyTime
         };
         
-        this.props.dispatch({ type: 'UPDATE_CURRENT', ...action });
+        this.props.dispatch({ type: 'UPDATE_CURRENT', event: action });
     }
 
     render() {

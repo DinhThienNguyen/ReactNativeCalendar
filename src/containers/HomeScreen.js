@@ -10,9 +10,6 @@ import NotifService from '../components/NotifService';
 import { connect } from "react-redux";
 import {LocaleConfig} from 'react-native-calendars';
 
-var SQLite = require('react-native-sqlite-storage');
-var db = SQLite.openDatabase({ name: 'calendarr.db', createFromLocation: '~calendar.db' }, this.openCB, this.errorCB);
-
 var eventListLoaded = false;
 
 class HomeScreen extends Component {
@@ -44,35 +41,14 @@ class HomeScreen extends Component {
             currentDate: `${new Date().getMonth() + 1}/${new Date().getFullYear()}`
         };
         this.notif = new NotifService(this.onNotif.bind(this));
-        if (!eventListLoaded) {
-            this.refreshEventColorList();
-            this.refreshSelectedDayEventList(moment().unix());
-            eventListLoaded = true;
-        }
+        // if (!eventListLoaded) {
+        //     this.refreshEventColorList();
+        //     this.refreshSelectedDayEventList(moment().unix());
+        //     eventListLoaded = true;
+        // }
     }
 
-    onNotif(notif) {
-        db.transaction((tx) => {
-            tx.executeSql('SELECT * FROM event where id = ?', [notif.id], (tx, results) => {
-
-                let len = results.rows.length;
-                for (let i = 0; i < len; i++) {
-                    let row = results.rows.item(i);
-                    let event = {
-                        eventId: row.id,
-                        eventColor: row.color_hexid,
-                        startTime: row.starttime,
-                        endTime: row.endtime,
-                        eventTitle: row.title,
-                        eventDescription: row.description
-                    }
-                    console.log(event);
-                    this.props.dispatch({ type: 'UPDATE_CURRENT', ...event });
-                }
-            });
-        });
-        this.props.navigation.navigate('EventDetail');
-    }
+    
 
     _toggleCalendarDialog = () => {
         this.setState({ calendarDialogVisible: true })
@@ -115,6 +91,29 @@ class HomeScreen extends Component {
                 }
             });
         });
+    }
+
+    onNotif(notif) {
+        db.transaction((tx) => {
+            tx.executeSql('SELECT * FROM event where id = ?', [notif.id], (tx, results) => {
+
+                let len = results.rows.length;
+                for (let i = 0; i < len; i++) {
+                    let row = results.rows.item(i);
+                    let event = {
+                        eventId: row.id,
+                        eventColor: row.color_hexid,
+                        startTime: row.starttime,
+                        endTime: row.endtime,
+                        eventTitle: row.title,
+                        eventDescription: row.description
+                    }
+                    console.log(event);
+                    this.props.dispatch({ type: 'UPDATE_CURRENT', ...event });
+                }
+            });
+        });
+        this.props.navigation.navigate('EventDetail');
     }
 
     refreshSelectedDayEventList = (startDate) => {
@@ -184,7 +183,7 @@ class HomeScreen extends Component {
                     </DialogContent>
                 </Dialog>
                 <Button title="test" onPress={() => {
-                    // this.notif.scheduleNotif(5, 3);
+                    this.notif.scheduleNotif(5, 181);
                     console.log(this.props.events.length);
                 }}></Button>
                 <View style={styles.eventListView}>

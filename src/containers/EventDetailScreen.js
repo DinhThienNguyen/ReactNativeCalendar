@@ -18,8 +18,8 @@ class EventDetailScreen extends Component {
         return converter.getTime() / 1000;
     }
 
-    convertMillisToDateString = (millis) => {
-        let converter = new Date(millis * 1000);
+    convertMillisToDateString = (sec) => {
+        let converter = new Date(sec * 1000);
         dayInWeek = "";
         switch (converter.getDay()) {
             case 0:
@@ -47,12 +47,36 @@ class EventDetailScreen extends Component {
         return dayInWeek + ", " + converter.getDate() + "/" + (converter.getMonth() + 1) + "/" + converter.getFullYear() + ", " + converter.getHours() + ":" + converter.getMinutes();
     }
 
-    convertMillisToHour = (millis) => {
-        return new Date(millis * 1000).getHours;
+    convertMillisToHour = (sec) => {
+        return new Date(sec * 1000).getHours;
     }
 
-    convertMillisToMinute = (millis) => {
-        return new Date(millis * 1000).getMinutes;
+    convertMillisToMinute = (sec) => {
+        return new Date(sec * 1000).getMinutes;
+    }
+
+    convertNotifyTimeToString = (notifyTime) => {
+        let minute = 0;
+        let hour = 0;
+        let day = 0;
+        let week = 0;
+        console.log(notifyTime);
+        if (notifyTime % 604800 === 0) {
+            week = notifyTime / 604800;
+            return `Trước ${week} tuần`;
+        }
+        if (notifyTime % 86400 === 0) {
+            day = notifyTime / 86400;
+            return `Trước ${day} ngày`;
+        }
+        if (notifyTime % 3600 === 0) {
+            hour = notifyTime / 3600;
+            return `Trước ${hour} giờ`;
+        }
+        if (notifyTime % 60 === 0) {
+            minute = notifyTime / 60;
+            return `Trước ${minute} phút`;
+        }
     }
 
     isEventOnlyToday = (startTime, endTime) => {
@@ -64,6 +88,15 @@ class EventDetailScreen extends Component {
     }
 
     render() {
+        let notifyTimeList = this.props.notifyTime.map((item, key) => {
+            return (
+                <View key={key}>
+                    <Text style={{ fontSize: 20, color: 'black' }}>
+                        {this.convertNotifyTimeToString(item.notifyTime)}
+                    </Text>
+                </View>
+            );
+        })
         return (
             <View style={{ flex: 1 }}>
                 <View style={{ flex: 3, justifyContent: 'flex-end', backgroundColor: this.props.eventColor }}>
@@ -104,7 +137,7 @@ class EventDetailScreen extends Component {
                             <Icon name="md-notifications" size={30} />
                         </View>
                         <View style={{ flex: 8, justifyContent: 'center' }}>
-                            <Text style={styles.detailText}>Hello</Text>
+                            {this.props.notifyTime.length > 0 ? notifyTimeList : <Text style={{ fontSize: 20, color: 'black' }}>Không có thông báo trước</Text>}
                         </View>
                     </View>
 
@@ -131,7 +164,8 @@ function mapStateToProps(state) {
         startTime: state.currentSelectedEvent.startTime,
         endTime: state.currentSelectedEvent.endTime,
         eventTitle: state.currentSelectedEvent.eventTitle,
-        eventDescription: state.currentSelectedEvent.eventDescription
+        eventDescription: state.currentSelectedEvent.eventDescription,
+        notifyTime: state.currentSelectedEvent.notifyTime,
     }
 }
 

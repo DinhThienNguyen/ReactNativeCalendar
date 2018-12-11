@@ -10,7 +10,7 @@ const selectedMonthEventList = (state = {}, action) => {
             state[dateString] = [...state[dateString], action.event];
             return state;
 
-        case 'UPDATE_LIST':
+        case 'UPDATE_LIST':            
             state = action.dayEventList;
             return state;
 
