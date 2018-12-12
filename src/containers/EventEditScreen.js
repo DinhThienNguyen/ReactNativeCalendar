@@ -14,34 +14,36 @@ class EventEditScreen extends Component {
         const { params = {} } = navigation.state;
         return {
             title: navigation.getParam('screenTitle', 'Thêm mới'),
+            headerStyle: {
+                backgroundColor: `${params.headerColor}`,
+            },
+            headerTintColor: 'white',
             headerRight: (
-                <Button
-                    onPress={() => {
-                        if (params.eventId == -1) {
-                            params.addNewEvent();
-                            const resetAction = StackActions.reset({
-                                index: 0,
-                                actions: [
-                                    NavigationActions.navigate({ routeName: 'Week' }),
-                                ],
-                            });
-                            navigation.dispatch(resetAction);
-                        } else {
-                            params.updateEvent();
-                            params.updateCurrentSelectedEvent();
-                            const resetAction = StackActions.reset({
-                                index: 1,
-                                actions: [
-                                    NavigationActions.navigate({ routeName: 'Week' }),
-                                    NavigationActions.navigate({ routeName: 'EventDetail' }),
-                                ],
-                            });
-                            navigation.dispatch(resetAction);
-                        }
-                    }}
-                    title="Lưu"
-                    color="#000"
-                />
+                <TouchableOpacity style={{ marginRight: 20 }} onPress={() => {
+                    if (params.eventId == -1) {
+                        params.addNewEvent();
+                        const resetAction = StackActions.reset({
+                            index: 0,
+                            actions: [
+                                NavigationActions.navigate({ routeName: 'Week' }),
+                            ],
+                        });
+                        navigation.dispatch(resetAction);
+                    } else {
+                        params.updateEvent();
+                        params.updateCurrentSelectedEvent();
+                        const resetAction = StackActions.reset({
+                            index: 1,
+                            actions: [
+                                NavigationActions.navigate({ routeName: 'Week' }),
+                                NavigationActions.navigate({ routeName: 'EventDetail' }),
+                            ],
+                        });
+                        navigation.dispatch(resetAction);
+                    }
+                }}>
+                    <Text style={{ fontSize: 18, color: 'white' }}>Lưu</Text>
+                </TouchableOpacity>
             ),
         };
     };
@@ -215,7 +217,8 @@ class EventEditScreen extends Component {
             addNewEvent: this._addNewEvent,
             updateEvent: this._updateEvent,
             updateCurrentSelectedEvent: this._updateCurrentSelectedEvent,
-            eventId: this.props.eventId
+            eventId: this.props.eventId,
+            headerColor: this.state.eventColor.hex
         })
     }
 
@@ -260,12 +263,6 @@ class EventEditScreen extends Component {
         this.props.dispatch({ type: 'UPDATE_CURRENT', event: action });
     }
 
-    async test() {
-        let temp = await this.props.DBHelper.getAllEventNotification();
-        console.log("\ngetAllEventNotification: ");
-        console.log(temp);
-    }
-
     render() {
         let notifyTimeList = this.state.notifyTime.map((item, key) => {
             return (
@@ -284,7 +281,7 @@ class EventEditScreen extends Component {
         let colorList = this.props.eventColorList.map((item, key) => {
             return (
                 <View key={key}>
-                    <TouchableOpacity onPress={() => { this.setState({ eventColor: item, colorPickerDialogVisible: false }) }}>
+                    <TouchableOpacity onPress={() => { this.setState({ eventColor: item, colorPickerDialogVisible: false }); this.props.navigation.setParams({ headerColor: item.hex }); }}>
                         <View style={{ flexDirection: 'row', padding: 10 }}>
                             <View >
                                 <View style={{ height: 30, width: 30, backgroundColor: item.hex }}></View>
@@ -299,9 +296,6 @@ class EventEditScreen extends Component {
         })
         return (
             <View style={{ flex: 1, backgroundColor: 'white' }}>
-                <Button title="test" onPress={() => {
-                    this.test();
-                }}></Button>
                 <View style={{ borderBottomColor: 'black', borderBottomWidth: 1, paddingBottom: 10, paddingLeft: 10 }}>
                     <TextInput
                         defaultValue={this.props.eventTitle}
