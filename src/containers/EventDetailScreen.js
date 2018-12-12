@@ -77,6 +77,9 @@ class EventDetailScreen extends Component {
             minute = notifyTime / 60;
             return `Trước ${minute} phút`;
         }
+        if(notifyTime === 1){
+            return 'Tại thời điểm xảy ra sự kiện';
+        }
     }
 
     isEventOnlyToday = (startTime, endTime) => {

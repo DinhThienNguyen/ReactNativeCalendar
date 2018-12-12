@@ -37,9 +37,12 @@ export default class DBHelper {
     }
 
     addEventNotfication(notification) {
+        console.log("\nnotification: ");
+        console.log(notification);
         db.transaction((tx) => {
-            tx.executeSql('INSERT INTO event_notification(eventId, notifyTime) values(?,?)',
+            tx.executeSql('INSERT INTO event_notification(notifyId, eventId, notifyTime) values(?,?,?)',
                 [
+                    notification.notifyId,
                     notification.eventId,
                     notification.notifyTime,
                 ], (tx, results) => { }
@@ -52,7 +55,39 @@ export default class DBHelper {
             tx.executeSql('UPDATE event_notification set notifyTime = ? WHERE notifyId = ?',
                 [
                     notification.notifyTime,
-                    notification.id,
+                    notification.notifyId,
+                ], (tx, results) => { }
+            );
+        });
+    }
+
+    getAllEventNotification() {
+        return new Promise((resolve, reject) => {
+            let notificationList = [];
+            db.transaction((tx) => {
+                tx.executeSql('SELECT * FROM event_notification', [], (tx, results) => {
+
+                    let len = results.rows.length;
+                    for (let i = 0; i < len; i++) {
+                        let row = results.rows.item(i);
+                        let notification = {
+                            notifyId: row.notifyId,
+                            eventId: row.eventId,
+                            notifyTime: row.notifyTime,
+                        }
+                        notificationList = [...notificationList, notification];
+                    }
+                    resolve(notificationList);
+                });
+            });
+        });
+    }
+
+    deleteEventNotification(notification) {
+        db.transaction((tx) => {
+            tx.executeSql('delete from event_notification where notifyId = ?',
+                [
+                    notification.notifyId
                 ], (tx, results) => { }
             );
         });
@@ -86,35 +121,10 @@ export default class DBHelper {
 
     getEventById(id) {
         return new Promise((resolve, reject) => {
-            db.transaction((tx) => {
-                tx.executeSql('SELECT * FROM event where eventId = ?', [id], (tx, results) => {
 
+            db.transaction((tx) => {
+                tx.executeSql('SELECT event.*, event_notification.notifyId, event_notification.notifyTime from event left join event_notification on event.eventId = event_notification.eventId where event.eventId = ?', [id], (tx, results) => {
                     let len = results.rows.length;
-                    for (let i = 0; i < len; i++) {
-                        let row = results.rows.item(i);
-                        let event = {
-                            eventId: row.eventId,
-                            eventColor: row.color_hexid,
-                            startTime: row.starttime,
-                            endTime: row.endtime,
-                            eventTitle: row.title,
-                            eventDescription: row.description
-                        }
-                        resolve(event);
-                    }
-                });
-            });
-
-        });
-    }
-
-    getEventList(startTimestamp, endTimestamp) {
-        return new Promise((resolve, reject) => {
-            
-            db.transaction((tx) => {
-                tx.executeSql('SELECT event.*, event_notification.notifyId, event_notification.notifyTime from event left join event_notification on event.eventId = event_notification.eventId where starttime >= ? and starttime <= ? ORDER BY starttime ASC', [startTimestamp, endTimestamp], (tx, results) => {
-                    let len = results.rows.length;    
-                    let monthEventList = [];                
                     let tempRow = results.rows.item(0);
                     let event = {
                         eventId: tempRow.eventId,
@@ -125,19 +135,64 @@ export default class DBHelper {
                         eventDescription: tempRow.description,
                         notifyTime: []
                     };
-                    if (tempRow.notifyId !== null) {                        
+                    if (tempRow.notifyId !== null) {
                         let notification = {
                             notifyId: tempRow.notifyId,
                             eventId: tempRow.eventId,
                             notifyTime: tempRow.notifyTime
-                        };                        
-                        event.notifyTime = [...event.notifyTime, notification];                        
+                        };
+                        event.notifyTime = [...event.notifyTime, notification];
+                    }
+
+                    for (let i = 1; i < len; i++) {
+                        let row = results.rows.item(i);
+                        if (event.eventId === row.eventId) {
+                            if (row.notifyId !== null) {
+                                let notification = {
+                                    notifyId: row.notifyId,
+                                    eventId: row.eventId,
+                                    notifyTime: row.notifyTime
+                                };
+                                event.notifyTime = [...event.notifyTime, notification];
+                            }
+                        }
+                    }
+                    resolve(event);
+                });
+            });
+        });
+    }
+
+    getEventList(startTimestamp, endTimestamp) {
+        return new Promise((resolve, reject) => {
+
+            db.transaction((tx) => {
+                tx.executeSql('SELECT event.*, event_notification.notifyId, event_notification.notifyTime from event left join event_notification on event.eventId = event_notification.eventId where starttime >= ? and starttime <= ? ORDER BY starttime ASC', [startTimestamp, endTimestamp], (tx, results) => {
+                    let len = results.rows.length;
+                    let monthEventList = [];
+                    let tempRow = results.rows.item(0);
+                    let event = {
+                        eventId: tempRow.eventId,
+                        eventColor: tempRow.color_hexid,
+                        startTime: tempRow.starttime,
+                        endTime: tempRow.endtime,
+                        eventTitle: tempRow.title,
+                        eventDescription: tempRow.description,
+                        notifyTime: []
+                    };
+                    if (tempRow.notifyId !== null) {
+                        let notification = {
+                            notifyId: tempRow.notifyId,
+                            eventId: tempRow.eventId,
+                            notifyTime: tempRow.notifyTime
+                        };
+                        event.notifyTime = [...event.notifyTime, notification];
                     }
 
                     for (let i = 1; i < len; i++) {
                         let row = results.rows.item(i);
                         if (event.eventId !== row.eventId) {
-                            monthEventList = [...monthEventList, {...event}];
+                            monthEventList = [...monthEventList, { ...event }];
 
                             event.eventId = row.eventId;
                             event.eventColor = row.color_hexid;
@@ -166,7 +221,7 @@ export default class DBHelper {
                             }
                         }
                     }
-                    monthEventList = [...monthEventList, {...event}];                    
+                    monthEventList = [...monthEventList, { ...event }];
                     resolve(monthEventList);
                 });
             });

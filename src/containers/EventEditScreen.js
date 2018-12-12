@@ -5,7 +5,7 @@ import Dialog, { DialogContent } from 'react-native-popup-dialog';
 import DatePicker from 'react-native-datepicker'
 import { NavigationActions, StackActions } from 'react-navigation';
 import moment from 'moment';
-import DBHelper from '../components/DBHelper'
+// import DBHelper from '../components/DBHelper'
 import { connect } from "react-redux";
 
 class EventEditScreen extends Component {
@@ -29,7 +29,14 @@ class EventEditScreen extends Component {
                         } else {
                             params.updateEvent();
                             params.updateCurrentSelectedEvent();
-                            navigation.dispatch(NavigationActions.back());
+                            const resetAction = StackActions.reset({
+                                index: 1,
+                                actions: [
+                                    NavigationActions.navigate({ routeName: 'Week' }),
+                                    NavigationActions.navigate({ routeName: 'EventDetail' }),
+                                ],
+                            });
+                            navigation.dispatch(resetAction);
                         }
                     }}
                     title="Lưu"
@@ -47,8 +54,10 @@ class EventEditScreen extends Component {
 
         const currentColor = this.props.eventColorList.find(element => element.hex === this.props.eventColor);
 
+        let notifyTime = this.props.notifyTime;
+
         this.state = {
-            notifyTime: [],
+            notifyTime: notifyTime.length > 0 ? notifyTime : [],
             eventColor: currentColor,
             colorPickerDialogVisible: false,
             notificationDialogVisible: false,
@@ -61,7 +70,7 @@ class EventEditScreen extends Component {
             notificationTimeUnit: 'phút',
             notificationTimeAmount: 1
         };
-        this.DBHelperService = new DBHelper();
+        // this.DBHelperService = new DBHelper();
     }
 
     _addNewEvent = () => {
@@ -76,6 +85,8 @@ class EventEditScreen extends Component {
             notifyTime: this.state.notifyTime
         };
 
+        // console.log(event);
+
         if (event.eventTitle === '') {
             event.eventTitle = "Không có tiêu đề";
         }
@@ -83,10 +94,9 @@ class EventEditScreen extends Component {
             event.eventDescription = "Không có mô tả";
         }
 
-        this.DBHelperService.addEvent(event);
+        this.props.DBHelper.addEvent(event);
 
         this.props.dispatch({ type: 'UPDATE_LAST_ID', latestEventId });
-        this.addNewEventNotification(event);
 
         let dayEventList = this.props.monthEventList;
         let dateString = moment(event.startTime * 1000).format('YYYY-MM-DD');
@@ -96,6 +106,8 @@ class EventEditScreen extends Component {
         dayEventList[dateString] = [...dayEventList[dateString], event];
 
         this.props.dispatch({ type: 'UPDATE_LIST', dayEventList: dayEventList });
+
+        this.scheduleEventNotification(event);
     }
 
     _updateEvent = () => {
@@ -106,6 +118,7 @@ class EventEditScreen extends Component {
             endTime: moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
             eventTitle: this.state.eventTitle,
             eventDescription: this.state.eventDescription,
+            notifyTime: this.state.notifyTime
         };
         if (event.eventTitle === '') {
             event.eventTitle = "Không có tiêu đề";
@@ -113,7 +126,7 @@ class EventEditScreen extends Component {
         if (event.eventDescription === '') {
             event.eventDescription = "Không có mô tả";
         }
-        this.DBHelperService.updateEvent(event);
+        this.props.DBHelper.updateEvent(event);
 
         let dayEventList = this.props.monthEventList;
         let dateString = moment(event.startTime * 1000).format('YYYY-MM-DD');
@@ -121,6 +134,17 @@ class EventEditScreen extends Component {
         tempEventList = tempEventList.map(events => (events.eventId === event.eventId) ? { ...event } : events);
         dayEventList[dateString] = tempEventList;
         this.props.dispatch({ type: 'UPDATE_LIST', dayEventList });
+
+        this.scheduleEventNotification(event);
+    }
+
+    scheduleEventNotification = (event) => {
+        for (let i = 0; i < event.notifyTime.length; i++) {
+            if ((event.startTime - event.notifyTime[i].notifyTime) > moment().unix()) {
+                let timeRemaining = event.startTime - moment().unix() - event.notifyTime[i].notifyTime;
+                this.props.notifService.scheduleNotif(timeRemaining, event, event.notifyTime[i].notifyId);
+            }
+        }
     }
 
     addNewEventNotification = (event) => {
@@ -136,7 +160,7 @@ class EventEditScreen extends Component {
             };
 
             notifyTimeList = [...notifyTimeList, notification];
-            this.DBHelperService.addEventNotfication(notification);
+            this.props.DBHelper.addEventNotfication(notification);
 
             if ((event.startTime - event.notifyTime[i]) > moment().unix()) {
                 let timeRemaining = event.startTime - moment().unix() - event.notifyTime[i];
@@ -148,8 +172,18 @@ class EventEditScreen extends Component {
     }
 
     addEventNotfication = (notifyTime) => {
+        let latestEventId = this.props.latestEventId + 1;
+        let latestEventNotifyId = this.props.latestEventNotifyId;
         let tempList = this.state.notifyTime;
-        tempList = [...tempList, notifyTime];
+        latestEventNotifyId++;
+        let notification = {
+            notifyId: latestEventNotifyId,
+            eventId: latestEventId,
+            notifyTime: notifyTime
+        };
+        this.props.DBHelper.addEventNotfication(notification);
+        this.props.dispatch({ type: 'UPDATE_LAST_EVENT_NOTIFY_ID', latestEventNotifyId });
+        tempList = [...tempList, notification];
         this.setState({
             notifyTime: tempList
         })
@@ -158,13 +192,18 @@ class EventEditScreen extends Component {
     updateEventNotification = (notifyTime) => {
         if (notifyTime === 0) {
             let tempList = this.state.notifyTime;
+            let notification = tempList[this.state.selectedNotification];
+            this.props.DBHelper.deleteEventNotification(notification);
             tempList.splice(this.state.selectedNotification, 1);
             this.setState({
                 notifyTime: tempList
             })
         } else {
             let tempList = this.state.notifyTime;
-            tempList[this.state.selectedNotification] = notifyTime;
+            let notification = tempList[this.state.selectedNotification];
+            notification.notifyTime = notifyTime;
+            this.props.DBHelper.updateEventNotification(notification);
+            tempList[this.state.selectedNotification] = notification;
             this.setState({
                 notifyTime: tempList
             })
@@ -214,23 +253,30 @@ class EventEditScreen extends Component {
             startTime: moment(this.state.startTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
             endTime: moment(this.state.endTime, "dddd, DD/MM/YYYY, HH:mm").unix(),
             eventTitle: this.state.eventTitle,
-            eventDescription: this.state.eventDescription
+            eventDescription: this.state.eventDescription,
+            notifyTime: this.state.notifyTime
         };
 
         this.props.dispatch({ type: 'UPDATE_CURRENT', event: action });
+    }
+
+    async test() {
+        let temp = await this.props.DBHelper.getAllEventNotification();
+        console.log("\ngetAllEventNotification: ");
+        console.log(temp);
     }
 
     render() {
         let notifyTimeList = this.state.notifyTime.map((item, key) => {
             return (
                 <View key={key}>
-                    <TouchableOpacity onPress={() => {
+                    <TouchableOpacity style={{ borderBottomWidth: 0.5, marginTop: 10, marginBottom: 10 }} onPress={() => {
                         this.setState({
                             notificationDialogVisible: true,
                             selectedNotification: key
                         })
                     }}>
-                        <Text style={styles.detailText}>{this.convertNotifyTimeToString(item)}</Text>
+                        <Text style={styles.detailText}>{this.convertNotifyTimeToString(item.notifyTime)}</Text>
                     </TouchableOpacity>
                 </View>
             );
@@ -244,7 +290,7 @@ class EventEditScreen extends Component {
                                 <View style={{ height: 30, width: 30, backgroundColor: item.hex }}></View>
                             </View>
                             <View style={{ paddingLeft: 10 }}>
-                                <Text style={{ fontSize: 24, color: 'black' }}>{item.name}</Text>
+                                <Text style={{ fontSize: 20, color: 'black' }}>{item.name}</Text>
                             </View>
                         </View>
                     </TouchableOpacity>
@@ -253,6 +299,9 @@ class EventEditScreen extends Component {
         })
         return (
             <View style={{ flex: 1, backgroundColor: 'white' }}>
+                <Button title="test" onPress={() => {
+                    this.test();
+                }}></Button>
                 <View style={{ borderBottomColor: 'black', borderBottomWidth: 1, paddingBottom: 10, paddingLeft: 10 }}>
                     <TextInput
                         defaultValue={this.props.eventTitle}
@@ -272,7 +321,7 @@ class EventEditScreen extends Component {
                             showIcon={false}
                             customStyles={{
                                 dateText: {
-                                    fontSize: 22
+                                    fontSize: 18
                                 },
                                 dateInput: { borderWidth: 0 }
                             }}
@@ -291,7 +340,7 @@ class EventEditScreen extends Component {
                             showIcon={false}
                             customStyles={{
                                 dateText: {
-                                    fontSize: 22
+                                    fontSize: 18
                                 },
                                 dateInput: { borderWidth: 0 }
                             }}
@@ -318,7 +367,7 @@ class EventEditScreen extends Component {
                             onTouchOutside={() => { this.setState({ notificationDialogVisible: false }) }}>
                             <DialogContent>
                                 <View>
-                                    <TouchableOpacity onPress={() => {
+                                    <TouchableOpacity style={{ marginTop: 30 }} onPress={() => {
                                         if (this.state.selectedNotification !== -1) {
                                             this.updateEventNotification(0);
                                             this.setState({
@@ -329,7 +378,7 @@ class EventEditScreen extends Component {
                                         <Text style={styles.detailText}>Không thông báo</Text>
                                     </TouchableOpacity>
 
-                                    <TouchableOpacity onPress={() => {
+                                    <TouchableOpacity style={{ marginTop: 30 }} onPress={() => {
                                         if (this.state.selectedNotification !== -1) {
                                             this.updateEventNotification(1);
                                         } else {
@@ -342,7 +391,7 @@ class EventEditScreen extends Component {
                                         <Text style={styles.detailText}>Tại thời điểm sự kiện</Text>
                                     </TouchableOpacity>
 
-                                    <TouchableOpacity onPress={() => {
+                                    <TouchableOpacity style={{ marginTop: 30 }} onPress={() => {
                                         if (this.state.selectedNotification !== -1) {
                                             this.updateEventNotification(1800);
                                         } else {
@@ -355,7 +404,7 @@ class EventEditScreen extends Component {
                                         <Text style={styles.detailText}>Trước 30 phút</Text>
                                     </TouchableOpacity>
 
-                                    <TouchableOpacity onPress={() => {
+                                    <TouchableOpacity style={{ marginTop: 30 }} onPress={() => {
                                         if (this.state.selectedNotification !== -1) {
                                             this.updateEventNotification(3600);
                                         } else {
@@ -368,7 +417,7 @@ class EventEditScreen extends Component {
                                         <Text style={styles.detailText}>Trước 1 tiếng</Text>
                                     </TouchableOpacity>
 
-                                    <TouchableOpacity onPress={() => {
+                                    <TouchableOpacity style={{ marginTop: 30 }} onPress={() => {
                                         this.setState({
                                             notificationDialogVisible: false,
                                             customNotificationDialogVisible: true
@@ -383,46 +432,67 @@ class EventEditScreen extends Component {
                         <Dialog dialogStyle={{ width: '90%' }} visible={this.state.customNotificationDialogVisible} onTouchOutside={() => { this.setState({ customNotificationDialogVisible: false }) }}>
                             <DialogContent>
                                 <View>
-                                    <Text style={[styles.detailText, { marginRight: 20, marginTop: 10 }]}>Trước</Text>
-                                    <TextInput keyboardType='numeric' style={styles.detailText} onChangeText={(text) => {
+                                    <Text style={[styles.detailText, { marginTop: 10 }]}>Trước</Text>
+                                    <TextInput keyboardType='numeric' style={[styles.detailText, { borderBottomWidth: 1 }]} onChangeText={(text) => {
                                         this.setState({
                                             notificationTimeAmount: text
                                         })
                                     }}></TextInput>
 
                                     <TouchableOpacity onPress={() => { this.setState({ notificationTimeUnit: 'phút' }) }}>
-                                        <Text style={styles.detailText}>phút</Text>
+                                        <Text style={{ marginTop: 30, fontSize: 18, color: this.state.notificationTimeUnit === 'phút' ? '#009ae4' : 'black' }}>phút</Text>
                                     </TouchableOpacity>
 
                                     <TouchableOpacity onPress={() => { this.setState({ notificationTimeUnit: 'giờ' }) }}>
-                                        <Text style={styles.detailText}>giờ</Text>
+                                        <Text style={{ marginTop: 30, fontSize: 18, color: this.state.notificationTimeUnit === 'giờ' ? '#009ae4' : 'black' }}>giờ</Text>
                                     </TouchableOpacity>
 
                                     <TouchableOpacity onPress={() => { this.setState({ notificationTimeUnit: 'ngày' }) }}>
-                                        <Text style={styles.detailText}>ngày</Text>
+                                        <Text style={{ marginTop: 30, fontSize: 18, color: this.state.notificationTimeUnit === 'ngày' ? '#009ae4' : 'black' }}>ngày</Text>
                                     </TouchableOpacity>
 
                                     <TouchableOpacity onPress={() => { this.setState({ notificationTimeUnit: 'tuần' }) }}>
-                                        <Text style={styles.detailText}>tuần</Text>
+                                        <Text style={{ marginTop: 30, fontSize: 18, color: this.state.notificationTimeUnit === 'tuần' ? '#009ae4' : 'black' }}>tuần</Text>
                                     </TouchableOpacity>
 
                                     <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
 
-                                        <TouchableOpacity onPress={() => {
+                                        <TouchableOpacity style={{ marginRight: 30 }} onPress={() => {
                                             if (this.state.notificationTimeAmount <= 0) {
                                                 ToastAndroid.show("Vui lòng nhập số lớn hơn 0!", ToastAndroid.LONG);
                                             } else {
+                                                let amount = 0;
+                                                switch (this.state.notificationTimeUnit) {
+                                                    case 'phút':
+                                                        amount = this.state.notificationTimeAmount * 60;
+                                                        break;
+
+                                                    case 'giờ':
+                                                        amount = this.state.notificationTimeAmount * 3600;
+                                                        break;
+
+                                                    case 'ngày':
+                                                        amount = this.state.notificationTimeAmount * 86400;
+                                                        break;
+
+                                                    case 'tuần':
+                                                        amount = this.state.notificationTimeAmount * 604800;
+                                                        break;
+
+                                                    default:
+                                                        amount = 0;
+                                                }
                                                 if (this.state.selectedNotification !== -1) {
-                                                    this.updateEventNotification(this.state.notificationTimeAmount);
+                                                    this.updateEventNotification(amount);
                                                 } else {
-                                                    this.addEventNotfication(this.state.notificationTimeAmount);
+                                                    this.addEventNotfication(amount);
                                                 }
                                                 this.setState({
                                                     customNotificationDialogVisible: false
                                                 })
                                             }
                                         }}>
-                                            <Text style={[styles.detailText, { paddingRight: 10 }]}>OK</Text>
+                                            <Text style={[styles.detailText]}>OK</Text>
                                         </TouchableOpacity>
 
                                         <TouchableOpacity onPress={() => {
@@ -431,7 +501,7 @@ class EventEditScreen extends Component {
                                                 customNotificationDialogVisible: false
                                             })
                                         }}>
-                                            <Text style={[styles.detailText, { paddingRight: 10 }]}>Hủy</Text>
+                                            <Text style={[styles.detailText]}>Hủy</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>
@@ -459,7 +529,7 @@ class EventEditScreen extends Component {
                         <TouchableOpacity onPress={() => { this.setState({ colorPickerDialogVisible: true }) }}>
                             <Text style={styles.detailText}>{this.state.eventColor.name}</Text>
                         </TouchableOpacity>
-                        <Dialog visible={this.state.colorPickerDialogVisible}
+                        <Dialog dialogStyle={{ width: '90%' }} visible={this.state.colorPickerDialogVisible}
                             onTouchOutside={() => { this.setState({ colorPickerDialogVisible: false }) }}>
                             <DialogContent>
                                 {colorList}
@@ -498,9 +568,11 @@ function mapStateToProps(state) {
         eventTitle: state.currentSelectedEvent.eventTitle,
         eventDescription: state.currentSelectedEvent.eventDescription,
         eventColorList: state.eventColorList,
+        notifyTime: state.currentSelectedEvent.notifyTime,
         latestEventId: state.latestEventId,
         monthEventList: state.selectedMonthEventList,
         notifService: state.globalNotifService,
+        DBHelper: state.globalDBHelper,
         latestEventNotifyId: state.latestEventNotifyId
     }
 }
@@ -513,7 +585,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end'
     },
     titleText: {
-        fontSize: 28,
+        fontSize: 22,
         color: 'black'
     },
     detail: {
@@ -521,12 +593,16 @@ const styles = StyleSheet.create({
         backgroundColor: '#ffffff',
     },
     detailText: {
-        fontSize: 22,
+        fontSize: 18,
         color: 'black'
     },
     icon: {
         flex: 2,
         justifyContent: 'center',
         alignItems: 'center'
+    },
+    notifyOption: {
+        padding: 5,
+        borderBottomWidth: 1
     }
 });

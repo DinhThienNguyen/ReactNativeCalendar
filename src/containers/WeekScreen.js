@@ -10,8 +10,7 @@ import DBHelper from '../components/DBHelper'
 import NotifService from '../components/NotifService'
 
 var eventColorListLoaded = false;
-var SQLite = require('react-native-sqlite-storage');
-var db = SQLite.openDatabase({ name: 'calendarr.db', createFromLocation: '~calendar.db' }, this.openCB, this.errorCB);
+
 class WeekScreen extends Component {
 
     static navigationOptions = ({ navigation }) => {
@@ -41,6 +40,7 @@ class WeekScreen extends Component {
             selectedMonth: -1,
         };
         this.DBHelperService = new DBHelper();
+        this.props.dispatch({ type: 'UPDATE_DB_HELPER', DBHelper: this.DBHelperService });
         this.notif = new NotifService(this.onNotif.bind(this));
         this.props.dispatch({ type: 'UPDATE_NOTIF_SERVICE', notifService: this.notif });
         if (!eventColorListLoaded) {
@@ -58,33 +58,12 @@ class WeekScreen extends Component {
         })
     }
 
-    onNotif(notif) {
+    async onNotif(notif) {
         console.log(notif);
-        // let event = await this.DBHelperService.getEventById(notif.id);
-        // console.log(event);
-        // this.props.dispatch({ type: 'UPDATE_CURRENT', ...event });
-        // this.props.navigation.navigate('EventDetail');
-        // db.transaction((tx) => {
-        //     tx.executeSql('SELECT * FROM event where id = ?', [notif.number], (tx, results) => {
-
-        //         let len = results.rows.length;
-        //         for (let i = 0; i < len; i++) {
-        //             let row = results.rows.item(i);
-        //             let event = {
-        //                 eventId: row.id,
-        //                 eventColor: row.color_hexid,
-        //                 startTime: row.starttime,
-        //                 endTime: row.endtime,
-        //                 eventTitle: row.title,
-        //                 eventDescription: row.description
-        //             }
-        //             // console.log(event);
-        //             this.props.dispatch({ type: 'UPDATE_CURRENT', ...event });
-
-        //         }
-        //     });
-        // });
-        // this.props.navigation.navigate('EventDetail');
+        let event = await this.DBHelperService.getEventById(notif.number);
+        console.log(event);
+        this.props.dispatch({ type: 'UPDATE_CURRENT', event: event });
+        this.props.navigation.navigate('EventDetail');
     }
 
     showCurrentDateEvent = () => {
@@ -149,8 +128,6 @@ class WeekScreen extends Component {
                     firstDay={1}
                     // refreshing={true}
                     minDate={'2012-10-05'}
-                    onCalendarToggled={(calendarOpened) => {console.log(calendarOpened)}}
-
                 />
                 <ActionButton
                     buttonColor="rgba(231,76,60,1)"
@@ -161,7 +138,8 @@ class WeekScreen extends Component {
                             startTime: this.state.selectedDay,
                             endTime: this.state.selectedDay,
                             eventTitle: '',
-                            eventDescription: ''
+                            eventDescription: '',
+                            notifyTime: [],
                         };
                         this.props.dispatch({ type: 'UPDATE_CURRENT', event: action });
                         this.props.navigation.navigate('EventEdit', {
@@ -213,12 +191,6 @@ class WeekScreen extends Component {
             r1.startTime !== r2.startTime ||
             r1.endTime !== r2.endTime ||
             r1.eventDescription !== r2.eventDescription;        
-    }
-
-    compareNotifyTimeList(l1, l2) {
-        for (let i = 0; i < l1.length; i++) {
-            return l1[i].notifyId !== l2[i].notifyId || l1[i].eventId !== l2[i].eventId || l1[i].notifyTime !== l2[i].notifyTime
-        }
     }
 }
 

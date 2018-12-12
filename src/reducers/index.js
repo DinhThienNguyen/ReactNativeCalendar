@@ -5,6 +5,7 @@ import selectedMonthEventList from './selectedMonthEventList'
 import latestEventId from './latestEventId'
 import latestEventNotifyId from './latestEventNotifyId'
 import globalNotifService from './globalNotifService'
+import globalDBHelper from './globalDBHelper'
 
 export default combineReducers({
     currentSelectedEvent: currentSelectedEvent,
@@ -12,5 +13,6 @@ export default combineReducers({
     selectedMonthEventList: selectedMonthEventList,
     latestEventId : latestEventId,
     globalNotifService : globalNotifService,
-    latestEventNotifyId: latestEventNotifyId
+    latestEventNotifyId: latestEventNotifyId,
+    globalDBHelper: globalDBHelper
 })
