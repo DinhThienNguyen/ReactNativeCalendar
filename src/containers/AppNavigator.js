@@ -2,13 +2,13 @@ import React from 'react';
 import { addNavigationHelpers, StackNavigator } from 'react-navigation';
 import { connect } from 'react-redux';
 import HomeScreen from './HomeScreen'
-import EventDetailScreen from './EventDetailScreen';
+import EventDetailsScreen from './EventDetailsScreen';
 import EventCard from '../components/EventCard'
 import EventEditScreen from './EventEditScreen'
 
 export const AppNavigator = StackNavigator({
     Home: HomeScreen,
-    EventDetail: EventDetailScreen,
+    EventDetails: EventDetailsScreen,
     EventCard: EventCard,
     EventEdit: EventEditScreen
 });

@@ -63,7 +63,7 @@ class WeekScreen extends Component {
         let event = await this.DBHelperService.getEventById(notif.number);
         console.log(event);
         this.props.dispatch({ type: 'UPDATE_CURRENT', event: event });
-        this.props.navigation.navigate('EventDetail');
+        this.props.navigation.navigate('EventDetails');
     }
 
     showCurrentDateEvent = () => {
@@ -115,7 +115,7 @@ class WeekScreen extends Component {
     render() {
 
         return (
-            <View style={styles.container}>                
+            <View style={styles.container}>         
                 <Agenda
                     items={this.props.monthEventList}
                     loadItemsForMonth={(month) => { this.getAllEventsIn2Months(month); }}
