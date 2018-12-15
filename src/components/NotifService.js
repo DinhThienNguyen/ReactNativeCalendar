@@ -2,13 +2,13 @@ import PushNotification from 'react-native-push-notification';
 
 export default class NotifService {
 
-  constructor() {
+  // constructor() {
 
-  }
-
-  // constructor(onNotification) {
-  //   this.configure(onNotification);
   // }
+
+  constructor(onNotification) {
+    this.configure(onNotification);
+  }
 
   configure(onNotification) {
     PushNotification.configure({
@@ -22,7 +22,8 @@ export default class NotifService {
     PushNotification.localNotificationSchedule({
       date: new Date(Date.now() + (notifyTime * 1000)),
       id: `${notifId}`,
-      message: event.eventTitle,
+      title: event.eventTitle,
+      message: event.eventDescription,
       number: `${event.eventId}`,
     });
   }

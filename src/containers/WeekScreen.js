@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Button, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { Agenda } from 'react-native-calendars';
 import EventCard from '../components/EventCard';
 import moment from 'moment';
@@ -27,12 +27,11 @@ var notif = new NotifService();
 //     // Register worker
 //     queue.addWorker('background-example', async (id, payload) => {
 
-//         // Load some arbitrary data while the app is in the background
-//         if (payload.name == 'luke') {
-//             await AsyncStorage.setItem('lukeData', 'Luke Skywalker arbitrary data loaded!');
-//         } else {
-//             await AsyncStorage.setItem('c3poData', 'C-3PO arbitrary data loaded!');
+//         let event = {
+//             eventId: payload.eventId,
+//             eventTitle: payload.eventTitle
 //         }
+//         notif.scheduleNotif(10, event, payload.notifyId);
 
 //     });
 
@@ -49,8 +48,6 @@ var notif = new NotifService();
 // });
 
 class WeekScreen extends Component {
-
-
 
     static navigationOptions = ({ navigation }) => {
         const { params = {} } = navigation.state;
@@ -77,10 +74,9 @@ class WeekScreen extends Component {
             selectedDay: moment().unix(),
             initialDate: `${moment().format('YYYY-MM-DD')}`,
             selectedMonth: -1,
+            markedDates: {},
         };
-        // this.DBHelperService = new DBHelper();
         this.props.dispatch({ type: 'UPDATE_DB_HELPER', DBHelper: DBHelperService });
-        // this.notif = new NotifService(this.onNotif.bind(this));
         notif.configure(this.onNotif.bind(this));
         this.props.dispatch({ type: 'UPDATE_NOTIF_SERVICE', notifService: notif });
         if (!eventColorListLoaded) {
@@ -90,7 +86,6 @@ class WeekScreen extends Component {
             eventColorListLoaded = true;
         }
     }
-
 
     componentDidMount() {
         this.props.navigation.setParams({
@@ -142,13 +137,27 @@ class WeekScreen extends Component {
 
     convertItemsToAgenda(monthEventList) {
         let dayEventList = {};
+        let eventColorList = [];
+        let markedDates = {};
         for (let i = 0; i < monthEventList.length; i++) {
             let date = moment(monthEventList[i].startTime * 1000).format('YYYY-MM-DD');
             if (!dayEventList[date]) {
                 dayEventList[date] = [];
+                eventColorList = [];
+            }
+            if (eventColorList === [])
+                eventColorList = [...eventColorList, { color: monthEventList[i].eventColor }]
+            else {
+                if (!eventColorList.includes(monthEventList[i].eventColor)) {
+                    eventColorList = [...eventColorList, { color: monthEventList[i].eventColor }]
+                }
             }
             dayEventList[date] = [...dayEventList[date], monthEventList[i]];
+            markedDates[date] = { dots: eventColorList };
         }
+        this.setState({
+            markedDates: markedDates
+        })
         this.props.dispatch({ type: 'UPDATE_LIST', dayEventList: dayEventList });
     }
 
@@ -170,26 +179,10 @@ class WeekScreen extends Component {
         console.log(temp);
     }
 
-    handlePerm(perms) {
-        Alert.alert("Permissions", JSON.stringify(perms));
-    }
-
     render() {
 
         return (
-<<<<<<< HEAD
             <View style={styles.container}>
-                <Button title="test" onPress={() => {
-                    // this.notif.checkPermission(this.handlePerm.bind(this));
-                    // let event = {
-                    //     eventTitle: 'hello',
-                    //     eventId: 99,
-                    // }
-                    // this.notif.scheduleNotif(10, event, 99);
-                }}></Button>
-=======
-            <View style={styles.container}>         
->>>>>>> 48b029e113729ca1e9217efdb9970ddc4a7345be
                 <Agenda
                     items={this.props.monthEventList}
                     loadItemsForMonth={(month) => { this.getAllEventsIn2Months(month); }}
@@ -200,8 +193,10 @@ class WeekScreen extends Component {
                     rowHasChanged={this.rowHasChanged.bind(this)}
                     selected={moment(this.state.selectedDay * 1000).format('YYYY-MM-DD')}
                     firstDay={1}
+                    markingType={'multi-dot'}
                     // refreshing={true}
                     minDate={'2012-10-05'}
+                    markedDates={this.state.markedDates}
                 />
                 <ActionButton
                     buttonColor="rgba(231,76,60,1)"
