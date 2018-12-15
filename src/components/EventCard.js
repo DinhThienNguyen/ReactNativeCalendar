@@ -74,7 +74,7 @@ class EventCard extends Component {
             <View style={[styles.card, { backgroundColor: this.props.eventColor }]}>
                 <TouchableOpacity onPress={() => {
                     this.updateCurrentSelectedEvent();
-                    this.props.navigation.navigate('EventDetail');
+                    this.props.navigation.navigate('EventDetails');
                 }} >
 
                     <Text style={styles.title}>{this.props.eventTitle === '' ? "Không có tiêu đề" : this.props.eventTitle}</Text>

@@ -103,7 +103,7 @@ class WeekScreen extends Component {
         let event = await DBHelperService.getEventById(notif.number);
         console.log(event);
         this.props.dispatch({ type: 'UPDATE_CURRENT', event: event });
-        this.props.navigation.navigate('EventDetail');
+        this.props.navigation.navigate('EventDetails');
     }
 
     showCurrentDateEvent = () => {
@@ -177,6 +177,7 @@ class WeekScreen extends Component {
     render() {
 
         return (
+<<<<<<< HEAD
             <View style={styles.container}>
                 <Button title="test" onPress={() => {
                     // this.notif.checkPermission(this.handlePerm.bind(this));
@@ -186,6 +187,9 @@ class WeekScreen extends Component {
                     // }
                     // this.notif.scheduleNotif(10, event, 99);
                 }}></Button>
+=======
+            <View style={styles.container}>         
+>>>>>>> 48b029e113729ca1e9217efdb9970ddc4a7345be
                 <Agenda
                     items={this.props.monthEventList}
                     loadItemsForMonth={(month) => { this.getAllEventsIn2Months(month); }}

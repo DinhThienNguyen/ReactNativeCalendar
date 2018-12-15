@@ -21,6 +21,16 @@ export default class DBHelper {
         });
     }
 
+    deleteEvent(event){
+        db.transaction((tx) => {
+            tx.executeSql('DELETE FROM event WHERE eventId = ?',
+                [
+                    event.eventId
+                ], (tx, results) => { }
+            );
+        });
+    }
+
     updateEvent(event) {
         db.transaction((tx) => {
             tx.executeSql('UPDATE event set color_hexid = ?, starttime = ?, endtime = ?, title = ?, description = ? WHERE eventId = ?',

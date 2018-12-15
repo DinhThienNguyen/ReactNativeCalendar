@@ -35,7 +35,7 @@ class EventEditScreen extends Component {
                             index: 1,
                             actions: [
                                 NavigationActions.navigate({ routeName: 'Week' }),
-                                NavigationActions.navigate({ routeName: 'EventDetail' }),
+                                NavigationActions.navigate({ routeName: 'EventDetails' }),
                             ],
                         });
                         navigation.dispatch(resetAction);

@@ -8,9 +8,9 @@ import { createDrawerNavigator } from 'react-navigation';
 
 import WeekScreen from './src/containers/WeekScreen'
 import HomeScreen from './src/containers/HomeScreen'
-import EventDetailScreen from './src/containers/EventDetailScreen';
 import EventCard from './src/components/EventCard'
 import EventEditScreen from './src/containers/EventEditScreen'
+import EventDetailsScreen from './src/containers/EventDetailsScreen';
 // import DateTimePickerTextComponent from './components/DateTimePickerTextComponent/DateTimePickerTextComponent.js';
 
 export default class App extends Component {
@@ -31,9 +31,9 @@ export default class App extends Component {
 
 const AppStackNavigator = createStackNavigator({  
   Week: WeekScreen,
-  EventDetail: EventDetailScreen,
   EventCard: EventCard,
-  EventEdit: EventEditScreen
+  EventEdit: EventEditScreen,
+  EventDetails: EventDetailsScreen
 },
 )
 

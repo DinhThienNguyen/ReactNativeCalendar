@@ -113,7 +113,7 @@ class HomeScreen extends Component {
                 }
             });
         });
-        this.props.navigation.navigate('EventDetail');
+        this.props.navigation.navigate('EventDetails');
     }
 
     refreshSelectedDayEventList = (startDate) => {
@@ -182,10 +182,6 @@ class HomeScreen extends Component {
                         />
                     </DialogContent>
                 </Dialog>
-                <Button title="test" onPress={() => {
-                    this.notif.scheduleNotif(5, 181);
-                    console.log(this.props.events.length);
-                }}></Button>
                 <View style={styles.eventListView}>
                     <ScrollView>
                         {eventCardList}

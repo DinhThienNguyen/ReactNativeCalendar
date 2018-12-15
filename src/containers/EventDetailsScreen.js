@@ -1,7 +1,11 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, ScrollView, ToastAndroid, Button } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Button, Alert} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'
 import { connect } from "react-redux";
+import { NavigationActions, StackActions } from 'react-navigation';
+import moment from 'moment';
+import WeekScreen from './WeekScreen';
+
 
 class EventDetailsScreen extends Component {
 
@@ -70,31 +74,92 @@ class EventDetailsScreen extends Component {
         return i;
     }
 
+    deleteEvent = () => {
+        let event = {
+            eventId: this.props.eventId
+        };
+
+        this.props.DBHelper.deleteEvent(event);
+
+        let dateString = moment(this.props.startTime * 1000).format('YYYY-MM-DD');
+        let tempList = this.props.monthEventList;
+        let dateEventList = tempList[dateString];
+        
+        for(let i=0; i<dateEventList.length; i++)
+        {
+            if(dateEventList[i].eventId === this.props.eventId)
+            {
+                dateEventList.splice(i, 1);
+                break;
+            }
+        }
+
+        tempList[dateString] = dateEventList;
+
+        this.props.dispatch({ type: 'UPDATE_LIST', dayEventList:tempList });
+    }
+
+    convertNotifyTimeToString = (notifyTime) => {
+        let minute = 0;
+        let hour = 0;
+        let day = 0;
+        let week = 0;
+        if (notifyTime % 604800 === 0) {
+            week = notifyTime / 604800;
+            return `Trước ${week} tuần`;
+        }
+        if (notifyTime % 86400 === 0) {
+            day = notifyTime / 86400;
+            return `Trước ${day} ngày`;
+        }
+        if (notifyTime % 3600 === 0) {
+            hour = notifyTime / 3600;
+            return `Trước ${hour} tiếng`;
+        }
+        if (notifyTime % 60 === 0) {
+            minute = notifyTime / 60;
+            return `Trước ${minute} phút`;
+        }
+        if (notifyTime === 1) {
+            minute = notifyTime / 60;
+            return `Tại thời điểm sự kiện`;
+        }
+    }
+
     render() {
+        let notifyTimeList = this.props.notifyTime.map((item, key) => {
+            return (
+                <View key={key}>
+                    <Text style={styles.detailText}>
+                        {this.convertNotifyTimeToString(item.notifyTime)}
+                    </Text>
+                </View>
+            );
+        })
         return (
            <View style = {{flex:1}}>
-                <View style = {{flex:3, justifyContent: 'flex-end', backgroundColor: this.props.eventColor}}>
-                    <View style={{flexDirection: 'row'}}>
-                            <Text style={{ fontFamily: 'sans-serif', fontSize: 28, fontWeight: 'bold', color: '#ffffff', marginBottom: 10, marginLeft: 20 }}>
-                                {this.props.eventTitle === '' ? "Không có tiêu đề" : this.props.eventTitle}
-                            </Text>
+                <View style = {{flex:3, justifyContent: 'space-between', backgroundColor: this.props.eventColor}}>
+                    <Text style = {{fontSize: 20, fontWeight: 'bold', color: '#ffffff', paddingLeft: 20, paddingTop: 15}}></Text>
+                    <View style={{flexDirection: 'row', paddingLeft: 20, paddingBottom: 10}}>
+                        <Text style={{ fontFamily: 'sans-serif', fontSize: 24, fontWeight: 'bold', color: '#ffffff'}}>
+                            {this.props.eventTitle === '' ? "Không có tiêu đề" : this.props.eventTitle}
+                        </Text>
                     </View>
                 </View>
                 <View style = {styles.detail}>
-                    <View style = {{flexDirection: 'row'}}>
+                    <View style = {{flexDirection: 'row', paddingTop: 5, paddingBottom: 5, paddingLeft: 10}}>
                         <View style = {styles.icon}>
-                            <Icon name="md-time" size={30} color = '#212121' />
+                            <Icon name="md-time" size={25} color = '#212121' />
                         </View>
                         <View style = {{flex: 9, flexDirection: 'row', alignItems: 'center'}}>
                             <Text style = {styles.title}>Time</Text>
                         </View>                          
                     </View>
-                    <View style = {styles.line}></View>
 
-                        <Text style={[styles.detailText,{paddingLeft: 20, paddingRight: 20}]}>
+                        <Text style={styles.detailText}>
                             {this.isEventOnlyToday(this.props.startTime, this.props.endTime) ? 'Hôm nay' : this.convertMillisToDateString(this.props.startTime)}
                         </Text>
-                        <Text style={[styles.detailText,{paddingLeft: 20, paddingRight: 20}]}>
+                        <Text style={styles.detailText}>
                             {this.isEventOnlyToday(this.props.startTime, this.props.endTime) ?
                                 this.convertMillisToHour(this.props.startTime) + ":" + this.convertMillisToMinute(this.props.startTime)+
                                 this.convertMillisToHour(this.props.endTime) + ":" + this.convertMillisToMinute(this.props.endTime)
@@ -103,34 +168,73 @@ class EventDetailsScreen extends Component {
                         </Text>
 
                     
-                    <View style = {{flexDirection: 'row'}}>
+                    <View style = {{flexDirection: 'row', paddingTop: 5, paddingBottom: 5, paddingLeft: 10}}>
                         <View style = {styles.icon}>
-                            <Icon name="md-notifications" size={30} color = '#212121' />
+                            <Icon name="md-notifications" size={25} color = '#212121' />
                         </View>
                         <View style = {{flex: 9}}>
                             <Text style = {styles.title}>Notification</Text>
                         </View> 
                     </View>
-                    <View style = {styles.line}></View>
 
-
-                    <Text style={[styles.detailText,{paddingLeft: 20, paddingRight: 20}]}>TEST</Text>
+                    <View style={{justifyContent: 'center' }}>
+                        {this.props.notifyTime.length > 0 ? notifyTimeList 
+                        : <Text style={styles.detailText}>Không có thông báo trước</Text>}
+                    </View>
 
                     
-                    <View style = {{flexDirection: 'row'}}>
+                    <View style = {{flexDirection: 'row', paddingTop: 5, paddingBottom: 5, paddingLeft: 10}}>
                         <View style = {styles.icon}>
-                            <Icon name="md-clipboard" size={30} color = '#212121' />
+                            <Icon name="md-list" size={25} color = '#212121' />
                         </View>
                         <View style = {{flex: 9}}>
                             <Text style = {styles.title}>Description</Text>
                         </View> 
                     </View>
-                    <View style = {styles.line}></View>
                     
                     <ScrollView>
-                        <Text style={[styles.detailText,{paddingLeft: 20, paddingRight: 20, fontFamily: 'sans-serif'}]}>{this.props.eventDescription === '' ? "không có miêu tả" : this.props.eventDescription}</Text>
+                        <Text style={styles.detailText}>
+                            {this.props.eventDescription === '' ? "không có miêu tả" : this.props.eventDescription}
+                        </Text>
                     </ScrollView>
                 </View>
+                <View style = {{flex: 0.5, justifyContent: 'center', alignItems: 'center'}}>
+                    <View style = {{flexDirection: 'row'}}>
+                    <Icon 
+                    name="md-create" size={30} color = '#212121'
+                    onPress={() => {
+                        this.props.navigation.navigate('EventEdit', {
+                            screenTitle: 'Chỉnh sửa'
+                        });
+                    }}></Icon>
+
+                    <View style = {{width: 35}}></View>
+
+                    <Icon 
+                    name="md-trash" size={30} color = '#212121'
+                    onPress={() => {
+                        Alert.alert(
+                            '',
+                            'Xóa sự kiện này ?',
+                            [
+                              {text: 'Hủy', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
+                              {text: 'Đồng ý', onPress: () => {
+                                this.deleteEvent();
+                                console.log('OK Pressed');
+                                const resetAction = StackActions.reset({
+                                    index: 0,
+                                    actions: [
+                                        NavigationActions.navigate({ routeName: 'Week' }),
+                                    ],
+                                });
+                                this.props.navigation.dispatch(resetAction);
+                              }},
+                            ],
+                            { cancelable: false }
+                          )  
+                    }}></Icon>
+                    </View>
+               </View>
            </View>
         );
     }
@@ -143,7 +247,10 @@ function mapStateToProps(state) {
         startTime: state.currentSelectedEvent.startTime,
         endTime: state.currentSelectedEvent.endTime,
         eventTitle: state.currentSelectedEvent.eventTitle,
-        eventDescription: state.currentSelectedEvent.eventDescription
+        eventDescription: state.currentSelectedEvent.eventDescription,
+        notifyTime: state.currentSelectedEvent.notifyTime,
+        DBHelper: state.globalDBHelper,
+        monthEventList: state.selectedMonthEventList,
     }
 }
 
@@ -151,31 +258,26 @@ export default connect(mapStateToProps)(EventDetailsScreen);
 
 const styles = StyleSheet.create({
     title: {
-        fontSize: 20,
+        fontSize: 18,
         color: '#484848',
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        fontFamily: 'sans-serif'
     },
     detail: {
-        flex: 7,
+        flex: 6,
         backgroundColor: '#ffffff',
     },
     detailText: {
-        fontSize: 22,
+        fontSize: 18,
         color: '#484848',
-        fontFamily: 'Roboto'
+        fontFamily: 'sans-serif',
+        paddingLeft: 20,
+        paddingRight: 20
     },
     icon: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center'
     },
-    line: {
-        borderBottomColor: '#484848',
-        borderBottomWidth: 1,
-        marginTop: 10,
-        marginRight: 10,
-        marginBottom: 10,
-        marginLeft: 10
-    }
 });
 
