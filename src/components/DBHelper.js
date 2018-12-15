@@ -37,8 +37,8 @@ export default class DBHelper {
     }
 
     addEventNotfication(notification) {
-        console.log("\nnotification: ");
-        console.log(notification);
+        // console.log("\nnotification: ");
+        // console.log(notification);
         db.transaction((tx) => {
             tx.executeSql('INSERT INTO event_notification(notifyId, eventId, notifyTime) values(?,?,?)',
                 [

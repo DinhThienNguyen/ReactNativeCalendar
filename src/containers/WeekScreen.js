@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Button } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Button, Alert } from 'react-native';
 import { Agenda } from 'react-native-calendars';
 import EventCard from '../components/EventCard';
 import moment from 'moment';
@@ -9,9 +9,48 @@ import Icon from 'react-native-vector-icons/Ionicons'
 import DBHelper from '../components/DBHelper'
 import NotifService from '../components/NotifService'
 
+// import BackgroundTask from 'react-native-background-task'
+// import queueFactory from 'react-native-queue';
+
+const cheerio = require('react-native-cheerio')
 var eventColorListLoaded = false;
 
+var DBHelperService = new DBHelper();
+var notif = new NotifService();
+
+
+// BackgroundTask.define(async () => {
+
+//     // Init queue
+//     queue = await queueFactory();
+
+//     // Register worker
+//     queue.addWorker('background-example', async (id, payload) => {
+
+//         // Load some arbitrary data while the app is in the background
+//         if (payload.name == 'luke') {
+//             await AsyncStorage.setItem('lukeData', 'Luke Skywalker arbitrary data loaded!');
+//         } else {
+//             await AsyncStorage.setItem('c3poData', 'C-3PO arbitrary data loaded!');
+//         }
+
+//     });
+
+//     // Start the queue with a lifespan
+//     // IMPORTANT: OS background tasks are limited to 30 seconds or less.
+//     // NOTE: Queue lifespan logic will attempt to stop queue processing 500ms less than passed lifespan for a healthy shutdown buffer.
+//     // IMPORTANT: Queue processing started with a lifespan will ONLY process jobs that have a defined timeout set.
+//     // Additionally, lifespan processing will only process next job if job.timeout < (remainingLifespan - 500).
+//     await queue.start(20000); // Run queue for at most 20 seconds.
+
+//     // finish() must be called before OS hits timeout.
+//     BackgroundTask.finish();
+
+// });
+
 class WeekScreen extends Component {
+
+
 
     static navigationOptions = ({ navigation }) => {
         const { params = {} } = navigation.state;
@@ -39,10 +78,11 @@ class WeekScreen extends Component {
             initialDate: `${moment().format('YYYY-MM-DD')}`,
             selectedMonth: -1,
         };
-        this.DBHelperService = new DBHelper();
-        this.props.dispatch({ type: 'UPDATE_DB_HELPER', DBHelper: this.DBHelperService });
-        this.notif = new NotifService(this.onNotif.bind(this));
-        this.props.dispatch({ type: 'UPDATE_NOTIF_SERVICE', notifService: this.notif });
+        // this.DBHelperService = new DBHelper();
+        this.props.dispatch({ type: 'UPDATE_DB_HELPER', DBHelper: DBHelperService });
+        // this.notif = new NotifService(this.onNotif.bind(this));
+        notif.configure(this.onNotif.bind(this));
+        this.props.dispatch({ type: 'UPDATE_NOTIF_SERVICE', notifService: notif });
         if (!eventColorListLoaded) {
             this.refreshEventColorList();
             this.refreshLatestEventId();
@@ -60,7 +100,7 @@ class WeekScreen extends Component {
 
     async onNotif(notif) {
         console.log(notif);
-        let event = await this.DBHelperService.getEventById(notif.number);
+        let event = await DBHelperService.getEventById(notif.number);
         console.log(event);
         this.props.dispatch({ type: 'UPDATE_CURRENT', event: event });
         this.props.navigation.navigate('EventDetail');
@@ -73,17 +113,17 @@ class WeekScreen extends Component {
     }
 
     async refreshLatestEventId() {
-        let latestEventId = await this.DBHelperService.getLatestEventId();
+        let latestEventId = await DBHelperService.getLatestEventId();
         this.props.dispatch({ type: 'UPDATE_LAST_ID', latestEventId });
     }
 
     async refreshLatestEventNotifyId() {
-        let latestEventNotifyId = await this.DBHelperService.getLatestEventNotifyId();
+        let latestEventNotifyId = await DBHelperService.getLatestEventNotifyId();
         this.props.dispatch({ type: 'UPDATE_LAST_EVENT_NOTIFY_ID', latestEventNotifyId });
     }
 
     async refreshEventColorList() {
-        let eventColorList = await this.DBHelperService.getEventColorList();
+        let eventColorList = await DBHelperService.getEventColorList();
         this.props.dispatch({ type: 'UPDATE_COLOR_LIST', eventColorList });
     }
 
@@ -95,7 +135,7 @@ class WeekScreen extends Component {
             });
             let startOfMonth = moment().set({ 'year': time.year, 'month': (time.month - 1) }).startOf('month').unix();
             let endOfMonth = moment().set({ 'year': time.year, 'month': (time.month) }).endOf('month').unix();
-            let monthEventList = await this.DBHelperService.getEventList(startOfMonth, endOfMonth);
+            let monthEventList = await DBHelperService.getEventList(startOfMonth, endOfMonth);
             this.convertItemsToAgenda(monthEventList);
         }
     }
@@ -112,10 +152,40 @@ class WeekScreen extends Component {
         this.props.dispatch({ type: 'UPDATE_LIST', dayEventList: dayEventList });
     }
 
+    async test() {
+
+        const searchUrl = `https://oep.uit.edu.vn/vi/thong-bao-chung`;
+        const response = await fetch(searchUrl);  // fetch page 
+
+        const htmlString = await response.text(); // get response text
+        const $ = cheerio.load(htmlString);       // parse HTML string
+
+        let temp = $("div.content > article")             // select result <li>s
+            .map((_, article) => ({                      // map to an list of objects
+                title: $("a", article).text(),
+                timeStamp: $("div.submitted", article).text(),
+                link: $("a", article).attr("href")
+            }));
+
+        console.log(temp);
+    }
+
+    handlePerm(perms) {
+        Alert.alert("Permissions", JSON.stringify(perms));
+    }
+
     render() {
 
         return (
-            <View style={styles.container}>                
+            <View style={styles.container}>
+                <Button title="test" onPress={() => {
+                    // this.notif.checkPermission(this.handlePerm.bind(this));
+                    // let event = {
+                    //     eventTitle: 'hello',
+                    //     eventId: 99,
+                    // }
+                    // this.notif.scheduleNotif(10, event, 99);
+                }}></Button>
                 <Agenda
                     items={this.props.monthEventList}
                     loadItemsForMonth={(month) => { this.getAllEventsIn2Months(month); }}
@@ -190,7 +260,7 @@ class WeekScreen extends Component {
             r1.eventColor !== r2.eventColor ||
             r1.startTime !== r2.startTime ||
             r1.endTime !== r2.endTime ||
-            r1.eventDescription !== r2.eventDescription;        
+            r1.eventDescription !== r2.eventDescription;
     }
 }
 

@@ -29,8 +29,7 @@ export default class App extends Component {
 }
 
 
-const AppStackNavigator = createStackNavigator({
-  // Home: HomeScreen,
+const AppStackNavigator = createStackNavigator({  
   Week: WeekScreen,
   EventDetail: EventDetailScreen,
   EventCard: EventCard,

@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, TextInput, View, ScrollView, TouchableOpacity, Button, Picker, ToastAndroid } from 'react-native';
+import { StyleSheet, Text, TextInput, View, ScrollView, TouchableOpacity, Button, ToastAndroid } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'
 import Dialog, { DialogContent } from 'react-native-popup-dialog';
 import DatePicker from 'react-native-datepicker'
 import { NavigationActions, StackActions } from 'react-navigation';
 import moment from 'moment';
-// import DBHelper from '../components/DBHelper'
 import { connect } from "react-redux";
 
 class EventEditScreen extends Component {

@@ -90,6 +90,28 @@ class EventDetailScreen extends Component {
         return false;
     }
 
+    test = () => {
+        let dateString = moment(event.startTime * 1000).format('YYYY-MM-DD');
+        let tempList = this.props.monthEventList;
+        let dateEventList = tempList[dateString];
+        console.log(tempList);
+        console.log(dateEventList);
+        
+        // for(let i=0; i<dateEventList.length; i++)
+        // {
+        //     if(dateEventList[i].eventId === this.props.eventId)
+        //     {
+        //         dateEventList.splice(i, 1);
+        //         break;
+        //     }
+        // }
+
+        // tempList[dateString] = dateEventList;
+
+        // this.props.dispatch({ type: 'UPDATE_LIST', tempList });
+
+    }
+
     render() {
         let notifyTimeList = this.props.notifyTime.map((item, key) => {
             return (

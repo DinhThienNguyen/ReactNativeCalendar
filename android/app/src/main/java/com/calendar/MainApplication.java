@@ -3,6 +3,8 @@ package com.calendar;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import io.realm.react.RealmReactPackage;
+import com.jamesisaac.rnbackgroundtask.BackgroundTaskPackage;
 import com.dieam.reactnativepushnotification.ReactNativePushNotificationPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
@@ -27,7 +29,9 @@ public class MainApplication extends Application implements ReactApplication {
       return Arrays.<ReactPackage>asList(
           new SQLitePluginPackage(),
           new ReactNativePushNotificationPackage(),
-          new MainReactPackage()
+          new MainReactPackage(),
+            new RealmReactPackage(),
+            new BackgroundTaskPackage()
       );
     }
 
@@ -46,5 +50,6 @@ public class MainApplication extends Application implements ReactApplication {
   public void onCreate() {
     super.onCreate();
     SoLoader.init(this, /* native exopackage */ false);
+    BackgroundTaskPackage.useContext(this);
   }
 }
