@@ -16,6 +16,7 @@
     "react-native-calendars": "^1.21.0",
     "react-native-cheerio": "^1.0.0-rc.4",
     "react-native-datepicker": "^1.7.2",
+    "react-native-keyboard-aware-scroll-view": "^0.8.0",
     "react-native-popup-dialog": "^0.16.6",
     "react-native-push-notification": "^3.1.2",
     "react-native-queue": "^1.2.1",

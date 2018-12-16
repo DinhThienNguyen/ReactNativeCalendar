@@ -28,6 +28,10 @@ export default class NotifService {
     });
   }
 
+  cancelNotif(notifyId) {
+    PushNotification.cancelLocalNotifications({id: `${notifyId}`});
+  }
+
   checkPermission(cbk) {
     return PushNotification.checkPermissions(cbk);
   }

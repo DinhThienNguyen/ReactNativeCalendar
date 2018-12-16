@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, TextInput, View, ScrollView, TouchableOpacity, Button, ToastAndroid } from 'react-native';
+import { StyleSheet, Text, TextInput, View, ScrollView, TouchableOpacity, Button, ToastAndroid, KeyboardAvoidingView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'
 import Dialog, { DialogContent } from 'react-native-popup-dialog';
 import DatePicker from 'react-native-datepicker'
 import { NavigationActions, StackActions } from 'react-navigation';
 import moment from 'moment';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 import { connect } from "react-redux";
 
 class EventEditScreen extends Component {
@@ -194,6 +195,7 @@ class EventEditScreen extends Component {
         if (notifyTime === 0) {
             let tempList = this.state.notifyTime;
             let notification = tempList[this.state.selectedNotification];
+            this.props.notifService.cancelNotif(notification.notifyId);
             this.props.DBHelper.deleteEventNotification(notification);
             tempList.splice(this.state.selectedNotification, 1);
             this.setState({
@@ -294,7 +296,12 @@ class EventEditScreen extends Component {
             );
         })
         return (
-            <View style={{ flex: 1, backgroundColor: 'white' }}>
+            <KeyboardAwareScrollView
+                style={{ backgroundColor: 'white' }}
+                resetScrollToCoords={{ x: 0, y: 0 }}
+                contentContainerStyle={styles.container}
+                scrollEnabled={true}
+            >
                 <View style={{ borderBottomColor: 'black', borderBottomWidth: 1, paddingBottom: 10, paddingLeft: 10 }}>
                     <TextInput
                         defaultValue={this.props.eventTitle}
@@ -547,7 +554,7 @@ class EventEditScreen extends Component {
                         </ScrollView>
                     </View>
                 </View>
-            </View>
+            </KeyboardAwareScrollView>
         );
     }
 }
