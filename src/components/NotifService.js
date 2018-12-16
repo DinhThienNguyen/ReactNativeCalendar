@@ -2,13 +2,13 @@ import PushNotification from 'react-native-push-notification';
 
 export default class NotifService {
 
-  // constructor() {
+  constructor() {
 
-  // }
-
-  constructor(onNotification) {
-    this.configure(onNotification);
   }
+
+  // constructor(onNotification) {
+  //   this.configure(onNotification);
+  // }
 
   configure(onNotification) {
     PushNotification.configure({

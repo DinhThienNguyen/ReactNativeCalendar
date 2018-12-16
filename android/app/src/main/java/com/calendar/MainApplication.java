@@ -6,6 +6,7 @@ import com.facebook.react.ReactApplication;
 
 
 import com.dieam.reactnativepushnotification.ReactNativePushNotificationPackage;
+import com.transistorsoft.rnbackgroundfetch.RNBackgroundFetchPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
@@ -29,6 +30,7 @@ public class MainApplication extends Application implements ReactApplication {
       return Arrays.<ReactPackage>asList(
           new SQLitePluginPackage(),
           new ReactNativePushNotificationPackage(),
+          new RNBackgroundFetchPackage(),
           new MainReactPackage()
             
       );

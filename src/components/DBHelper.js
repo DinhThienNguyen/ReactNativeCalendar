@@ -21,7 +21,7 @@ export default class DBHelper {
         });
     }
 
-    deleteEvent(event){
+    deleteEvent(event) {
         db.transaction((tx) => {
             tx.executeSql('DELETE FROM event WHERE eventId = ?',
                 [
@@ -260,6 +260,65 @@ export default class DBHelper {
         });
     }
 
+    getLatestOEPFetchTime() {
+        return new Promise((resolve, reject) => {
+            db.transaction((tx) => {
+                tx.executeSql('SELECT latestOEPFetchTime FROM settings where id = 1', [], (tx, results) => {
+                    let latestOEPFetchTime = 0;
+                    let row = results.rows.item(0);
+                    latestOEPFetchTime = row.latestOEPFetchTime;
+                    resolve(latestOEPFetchTime);
+                });
+            });
+        });
+    }
+
+    updateLatestOEPFetchTime(timeStamp) {
+        db.transaction((tx) => {
+            tx.executeSql('UPDATE settings set latestOEPFetchTime = ? where id = 1', [timeStamp], (tx, results) => {
+            });
+        });
+    }
+
+    getLatestCTSVFetchTime() {
+        return new Promise((resolve, reject) => {
+            db.transaction((tx) => {
+                tx.executeSql('SELECT latestCTSVFetchTime FROM settings where id = 1', [], (tx, results) => {
+                    let latestCTSVFetchTime = 0;
+                    let row = results.rows.item(0);
+                    latestCTSVFetchTime = row.latestCTSVFetchTime;
+                    resolve(latestCTSVFetchTime);
+                });
+            });
+        });
+    }
+
+    updateLatestCTSVFetchTime(timeStamp) {
+        db.transaction((tx) => {
+            tx.executeSql('UPDATE settings set latestCTSVFetchTime = ? where id = 1', [timeStamp], (tx, results) => {
+            });
+        });
+    }
+
+    getLatestDAAFetchTime() {
+        return new Promise((resolve, reject) => {
+            db.transaction((tx) => {
+                tx.executeSql('SELECT latestDAAFetchTime FROM settings where id = 1', [], (tx, results) => {
+                    let latestDAAFetchTime = 0;
+                    let row = results.rows.item(0);
+                    latestDAAFetchTime = row.latestDAAFetchTime;
+                    resolve(latestDAAFetchTime);
+                });
+            });
+        });
+    }
+
+    updateLatestDAAFetchTime(timeStamp) {
+        db.transaction((tx) => {
+            tx.executeSql('UPDATE settings set latestDAAFetchTime = ? where id = 1', [timeStamp], (tx, results) => {
+            });
+        });
+    }
 
     errorCB(err) {
         // console.log("SQL Error: " + err);

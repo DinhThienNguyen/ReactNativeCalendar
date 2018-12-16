@@ -11,6 +11,7 @@
     "react": "16.5.0",
     "react-native": "0.57.0",
     "react-native-action-button": "^2.8.5",
+    "react-native-background-fetch": "^2.4.5",
     "react-native-calendars": "^1.21.0",
     "react-native-cheerio": "^1.0.0-rc.4",
     "react-native-datepicker": "^1.7.2",

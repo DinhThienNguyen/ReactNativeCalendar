@@ -1,10 +1,9 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, ScrollView, Button, Alert} from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Alert, Linking } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'
 import { connect } from "react-redux";
 import { NavigationActions, StackActions } from 'react-navigation';
 import moment from 'moment';
-import WeekScreen from './WeekScreen';
 
 
 class EventDetailsScreen extends Component {
@@ -84,11 +83,9 @@ class EventDetailsScreen extends Component {
         let dateString = moment(this.props.startTime * 1000).format('YYYY-MM-DD');
         let tempList = this.props.monthEventList;
         let dateEventList = tempList[dateString];
-        
-        for(let i=0; i<dateEventList.length; i++)
-        {
-            if(dateEventList[i].eventId === this.props.eventId)
-            {
+
+        for (let i = 0; i < dateEventList.length; i++) {
+            if (dateEventList[i].eventId === this.props.eventId) {
                 dateEventList.splice(i, 1);
                 break;
             }
@@ -96,7 +93,7 @@ class EventDetailsScreen extends Component {
 
         tempList[dateString] = dateEventList;
 
-        this.props.dispatch({ type: 'UPDATE_LIST', dayEventList:tempList });
+        this.props.dispatch({ type: 'UPDATE_LIST', dayEventList: tempList });
     }
 
     convertNotifyTimeToString = (notifyTime) => {
@@ -137,105 +134,111 @@ class EventDetailsScreen extends Component {
             );
         })
         return (
-           <View style = {{flex:1}}>
-                <View style = {{flex:3, justifyContent: 'space-between', backgroundColor: this.props.eventColor}}>
-                    <Text style = {{fontSize: 20, fontWeight: 'bold', color: '#ffffff', paddingLeft: 20, paddingTop: 15}}></Text>
-                    <View style={{flexDirection: 'row', paddingLeft: 20, paddingBottom: 10}}>
-                        <Text style={{ fontFamily: 'sans-serif', fontSize: 24, fontWeight: 'bold', color: '#ffffff'}}>
+            <View style={{ flex: 1 }}>
+                <View style={{ flex: 3, justifyContent: 'space-between', backgroundColor: this.props.eventColor }}>
+                    <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#ffffff', paddingLeft: 20, paddingTop: 15 }}></Text>
+                    <View style={{ flexDirection: 'row', paddingLeft: 20, paddingBottom: 10 }}>
+                        <Text style={{ fontFamily: 'sans-serif', fontSize: 24, fontWeight: 'bold', color: '#ffffff' }}>
                             {this.props.eventTitle === '' ? "Không có tiêu đề" : this.props.eventTitle}
                         </Text>
                     </View>
                 </View>
-                <View style = {styles.detail}>
-                    <View style = {{flexDirection: 'row', paddingTop: 5, paddingBottom: 5, paddingLeft: 10}}>
-                        <View style = {styles.icon}>
-                            <Icon name="md-time" size={25} color = '#212121' />
+                <View style={styles.detail}>
+                    <View style={{ flexDirection: 'row', paddingTop: 5, paddingBottom: 5, paddingLeft: 10 }}>
+                        <View style={styles.icon}>
+                            <Icon name="md-time" size={25} color='#212121' />
                         </View>
-                        <View style = {{flex: 9, flexDirection: 'row', alignItems: 'center'}}>
-                            <Text style = {styles.title}>Time</Text>
-                        </View>                          
-                    </View>
-
-                        <Text style={styles.detailText}>
-                            {this.isEventOnlyToday(this.props.startTime, this.props.endTime) ? 'Hôm nay' : this.convertMillisToDateString(this.props.startTime)}
-                        </Text>
-                        <Text style={styles.detailText}>
-                            {this.isEventOnlyToday(this.props.startTime, this.props.endTime) ?
-                                this.convertMillisToHour(this.props.startTime) + ":" + this.convertMillisToMinute(this.props.startTime)+
-                                this.convertMillisToHour(this.props.endTime) + ":" + this.convertMillisToMinute(this.props.endTime)
-                                :
-                                this.convertMillisToDateString(this.props.endTime)}
-                        </Text>
-
-                    
-                    <View style = {{flexDirection: 'row', paddingTop: 5, paddingBottom: 5, paddingLeft: 10}}>
-                        <View style = {styles.icon}>
-                            <Icon name="md-notifications" size={25} color = '#212121' />
+                        <View style={{ flex: 9, flexDirection: 'row', alignItems: 'center' }}>
+                            <Text style={styles.title}>Time</Text>
                         </View>
-                        <View style = {{flex: 9}}>
-                            <Text style = {styles.title}>Notification</Text>
-                        </View> 
                     </View>
 
-                    <View style={{justifyContent: 'center' }}>
-                        {this.props.notifyTime.length > 0 ? notifyTimeList 
-                        : <Text style={styles.detailText}>Không có thông báo trước</Text>}
-                    </View>
+                    <Text style={styles.detailText}>
+                        {this.isEventOnlyToday(this.props.startTime, this.props.endTime) ? 'Hôm nay' : this.convertMillisToDateString(this.props.startTime)}
+                    </Text>
+                    <Text style={styles.detailText}>
+                        {this.isEventOnlyToday(this.props.startTime, this.props.endTime) ?
+                            this.convertMillisToHour(this.props.startTime) + ":" + this.convertMillisToMinute(this.props.startTime) +
+                            this.convertMillisToHour(this.props.endTime) + ":" + this.convertMillisToMinute(this.props.endTime)
+                            :
+                            this.convertMillisToDateString(this.props.endTime)}
+                    </Text>
 
-                    
-                    <View style = {{flexDirection: 'row', paddingTop: 5, paddingBottom: 5, paddingLeft: 10}}>
-                        <View style = {styles.icon}>
-                            <Icon name="md-list" size={25} color = '#212121' />
+
+                    <View style={{ flexDirection: 'row', paddingTop: 5, paddingBottom: 5, paddingLeft: 10 }}>
+                        <View style={styles.icon}>
+                            <Icon name="md-notifications" size={25} color='#212121' />
                         </View>
-                        <View style = {{flex: 9}}>
-                            <Text style = {styles.title}>Description</Text>
-                        </View> 
+                        <View style={{ flex: 9 }}>
+                            <Text style={styles.title}>Notification</Text>
+                        </View>
                     </View>
-                    
+
+                    <View style={{ justifyContent: 'center' }}>
+                        {this.props.notifyTime.length > 0 ? notifyTimeList
+                            : <Text style={styles.detailText}>Không có thông báo trước</Text>}
+                    </View>
+
+
+                    <View style={{ flexDirection: 'row', paddingTop: 5, paddingBottom: 5, paddingLeft: 10 }}>
+                        <View style={styles.icon}>
+                            <Icon name="md-list" size={25} color='#212121' />
+                        </View>
+                        <View style={{ flex: 9 }}>
+                            <Text style={styles.title}>Description</Text>
+                        </View>
+                    </View>
+
                     <ScrollView>
-                        <Text style={styles.detailText}>
+                        <Text onPress={() => {
+                            if(this.props.eventDescription.slice(0, 5) === 'https'){
+                                Linking.openURL(this.props.eventDescription);
+                            }
+                        }} style={styles.detailText}>
                             {this.props.eventDescription === '' ? "không có miêu tả" : this.props.eventDescription}
                         </Text>
                     </ScrollView>
                 </View>
-                <View style = {{flex: 0.5, justifyContent: 'center', alignItems: 'center'}}>
-                    <View style = {{flexDirection: 'row'}}>
-                    <Icon 
-                    name="md-create" size={30} color = '#212121'
-                    onPress={() => {
-                        this.props.navigation.navigate('EventEdit', {
-                            screenTitle: 'Chỉnh sửa'
-                        });
-                    }}></Icon>
-
-                    <View style = {{width: 35}}></View>
-
-                    <Icon 
-                    name="md-trash" size={30} color = '#212121'
-                    onPress={() => {
-                        Alert.alert(
-                            '',
-                            'Xóa sự kiện này ?',
-                            [
-                              {text: 'Hủy', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
-                              {text: 'Đồng ý', onPress: () => {
-                                this.deleteEvent();
-                                console.log('OK Pressed');
-                                const resetAction = StackActions.reset({
-                                    index: 0,
-                                    actions: [
-                                        NavigationActions.navigate({ routeName: 'Week' }),
-                                    ],
+                <View style={{ flex: 0.5, justifyContent: 'center', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row' }}>
+                        <Icon
+                            name="md-create" size={30} color='#212121'
+                            onPress={() => {
+                                this.props.navigation.navigate('EventEdit', {
+                                    screenTitle: 'Chỉnh sửa'
                                 });
-                                this.props.navigation.dispatch(resetAction);
-                              }},
-                            ],
-                            { cancelable: false }
-                          )  
-                    }}></Icon>
+                            }}></Icon>
+
+                        <View style={{ width: 35 }}></View>
+
+                        <Icon
+                            name="md-trash" size={30} color='#212121'
+                            onPress={() => {
+                                Alert.alert(
+                                    '',
+                                    'Xóa sự kiện này ?',
+                                    [
+                                        { text: 'Hủy', onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
+                                        {
+                                            text: 'Đồng ý', onPress: () => {
+                                                this.deleteEvent();
+                                                console.log('OK Pressed');
+                                                const resetAction = StackActions.reset({
+                                                    index: 0,
+                                                    actions: [
+                                                        NavigationActions.navigate({ routeName: 'Week' }),
+                                                    ],
+                                                });
+                                                this.props.navigation.dispatch(resetAction);
+                                            }
+                                        },
+                                    ],
+                                    { cancelable: false }
+                                )
+                            }}></Icon>
                     </View>
-               </View>
-           </View>
+                </View>
+            </View>
         );
     }
 }

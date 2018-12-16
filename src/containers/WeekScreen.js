@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Button } from 'react-native';
 import { Agenda } from 'react-native-calendars';
 import EventCard from '../components/EventCard';
 import moment from 'moment';
@@ -8,44 +8,14 @@ import ActionButton from 'react-native-action-button';
 import Icon from 'react-native-vector-icons/Ionicons'
 import DBHelper from '../components/DBHelper'
 import NotifService from '../components/NotifService'
+import BackgroundFetch from "react-native-background-fetch";
+import WebFetchService from '../components/WebFetchService'
 
-// import BackgroundTask from 'react-native-background-task'
-// import queueFactory from 'react-native-queue';
-
-const cheerio = require('react-native-cheerio')
 var eventColorListLoaded = false;
 
 var DBHelperService = new DBHelper();
 var notif = new NotifService();
-
-
-// BackgroundTask.define(async () => {
-
-//     // Init queue
-//     queue = await queueFactory();
-
-//     // Register worker
-//     queue.addWorker('background-example', async (id, payload) => {
-
-//         let event = {
-//             eventId: payload.eventId,
-//             eventTitle: payload.eventTitle
-//         }
-//         notif.scheduleNotif(10, event, payload.notifyId);
-
-//     });
-
-//     // Start the queue with a lifespan
-//     // IMPORTANT: OS background tasks are limited to 30 seconds or less.
-//     // NOTE: Queue lifespan logic will attempt to stop queue processing 500ms less than passed lifespan for a healthy shutdown buffer.
-//     // IMPORTANT: Queue processing started with a lifespan will ONLY process jobs that have a defined timeout set.
-//     // Additionally, lifespan processing will only process next job if job.timeout < (remainingLifespan - 500).
-//     await queue.start(20000); // Run queue for at most 20 seconds.
-
-//     // finish() must be called before OS hits timeout.
-//     BackgroundTask.finish();
-
-// });
+var webFetchService = new WebFetchService();
 
 class WeekScreen extends Component {
 
@@ -91,6 +61,94 @@ class WeekScreen extends Component {
         this.props.navigation.setParams({
             _showCurrentDateEvent: this.showCurrentDateEvent,
         })
+
+        BackgroundFetch.configure({
+            minimumFetchInterval: 15, // <-- minutes (15 is minimum allowed)
+            stopOnTerminate: false,   // <-- Android-only,
+            startOnBoot: true         // <-- Android-only
+        }, async () => {
+            console.log("Background task")
+            let OEPNews = await webFetchService.fetchOEP();
+            let latestOEPFetchTime = await DBHelperService.getLatestOEPFetchTime();
+            let latestEventId = await DBHelperService.getLatestEventId();
+            let latestNotifyId = await DBHelperService.getLatestEventNotifyId();
+            OEPNews.map(news => {
+                if (news.timeStamp >= latestOEPFetchTime) {
+                    latestEventId++;
+                    latestNotifyId++;
+                    let event = {
+                        eventId: latestEventId,
+                        eventColor: '#009ae4',
+                        startTime: news.timeStamp,
+                        endTime: news.timeStamp,
+                        eventTitle: news.title,
+                        eventDescription: news.link,
+                    };
+                    DBHelperService.addEvent(event);
+                    notif.scheduleNotif(5, event, latestNotifyId);
+                    DBHelperService.updateLatestOEPFetchTime(moment().unix());
+                }
+            });
+
+            let CTSVNews = await webFetchService.fetchCTSV();
+            let latestCTSVFetchTime = await DBHelperService.getLatestCTSVFetchTime();
+            CTSVNews.map(news => {
+                if (news.timeStamp >= latestCTSVFetchTime) {
+                    latestEventId++;
+                    latestNotifyId++;
+                    let event = {
+                        eventId: latestEventId,
+                        eventColor: '#009ae4',
+                        startTime: news.timeStamp,
+                        endTime: news.timeStamp,
+                        eventTitle: news.title,
+                        eventDescription: news.link,
+                    };
+                    DBHelperService.addEvent(event);
+                    notif.scheduleNotif(5, event, latestNotifyId);
+                    DBHelperService.updateLatestCTSVFetchTime(moment().unix());
+                }
+            });
+
+            let DAANews = await webFetchService.fetchDAA();
+            let latestDAAFetchTime = await DBHelperService.getLatestDAAFetchTime();
+            DAANews.map(news => {
+                if (news.timeStamp >= latestDAAFetchTime) {
+                    latestEventId++;
+                    latestNotifyId++;
+                    let event = {
+                        eventId: latestEventId,
+                        eventColor: '#009ae4',
+                        startTime: news.timeStamp,
+                        endTime: news.timeStamp,
+                        eventTitle: news.title,
+                        eventDescription: news.link,
+                    };
+                    DBHelperService.addEvent(event);
+                    notif.scheduleNotif(5, event, latestNotifyId);
+                    DBHelperService.updateLatestDAAFetchTime(moment().unix());
+                }
+            });
+
+            BackgroundFetch.finish(BackgroundFetch.FETCH_RESULT_NEW_DATA);
+        }, (error) => {
+            console.log("[js] RNBackgroundFetch failed to start");
+        });
+
+        // Optional: Query the authorization status.
+        BackgroundFetch.status((status) => {
+            switch (status) {
+                case BackgroundFetch.STATUS_RESTRICTED:
+                    console.log("BackgroundFetch restricted");
+                    break;
+                case BackgroundFetch.STATUS_DENIED:
+                    console.log("BackgroundFetch denied");
+                    break;
+                case BackgroundFetch.STATUS_AVAILABLE:
+                    console.log("BackgroundFetch is enabled");
+                    break;
+            }
+        });
     }
 
     async onNotif(notif) {
@@ -162,27 +220,34 @@ class WeekScreen extends Component {
     }
 
     async test() {
-
-        const searchUrl = `https://oep.uit.edu.vn/vi/thong-bao-chung`;
-        const response = await fetch(searchUrl);  // fetch page 
-
-        const htmlString = await response.text(); // get response text
-        const $ = cheerio.load(htmlString);       // parse HTML string
-
-        let temp = $("div.content > article")             // select result <li>s
-            .map((_, article) => ({                      // map to an list of objects
-                title: $("a", article).text(),
-                timeStamp: $("div.submitted", article).text(),
-                link: $("a", article).attr("href")
-            }));
-
-        console.log(temp);
+        let DAANews = await webFetchService.fetchDAA();
+        let latestDAAFetchTime = await DBHelperService.getLatestDAAFetchTime();
+        let latestEventId = await DBHelperService.getLatestEventId();
+        let latestNotifyId = await DBHelperService.getLatestEventNotifyId();
+        DAANews.map(news => {
+            if (news.timeStamp >= latestDAAFetchTime) {
+                latestEventId++;
+                latestNotifyId++;
+                let event = {
+                    eventId: latestEventId,
+                    eventColor: '#009ae4',
+                    startTime: news.timeStamp,
+                    endTime: news.timeStamp,
+                    eventTitle: news.title,
+                    eventDescription: news.link,
+                };
+                DBHelperService.addEvent(event);
+                notif.scheduleNotif(5, event, latestNotifyId);
+                DBHelperService.updateLatestCTSVFetchTime(moment().unix());
+            }
+        });
     }
 
     render() {
 
         return (
             <View style={styles.container}>
+                <Button title="test" onPress={() => { this.test(); }}></Button>
                 <Agenda
                     items={this.props.monthEventList}
                     loadItemsForMonth={(month) => { this.getAllEventsIn2Months(month); }}
