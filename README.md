@@ -30,5 +30,7 @@ Huge thanks to:
 ## Contributors
 
 Thiện: Code UIT news checking functionality, main app logic
+
 Thắng: Design and code EventDetailsScreen, design EditEventScreen, design database
+
 Trí: code and design WeekScreen, homepage
