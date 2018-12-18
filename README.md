@@ -26,3 +26,9 @@ Huge thanks to:
 * [react-native-push-notification](https://github.com/zo0r/react-native-push-notification)
 * [react-native-sqlite-storage](https://github.com/andpor/react-native-sqlite-storage)
 * [react-moment](https://www.npmjs.com/package/react-moment)
+
+## Contributors
+
+Thiện: Code UIT news checking functionality, main app logic
+Thắng: Design and code EventDetailsScreen, design EditEventScreen, design database
+Trí: code and design WeekScreen, homepage
