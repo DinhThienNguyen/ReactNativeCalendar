@@ -9,10 +9,14 @@ export default class WebFetchService {
         const htmlString = await response.text(); // get response text
         const $ = cheerio.load(htmlString);       // parse HTML string
 
-        let temp = $("div.content > article")             // select result <li>s
-            .map((_, article) => ({                      // map to an list of objects
-                title: '[OEP] ' + $("a", article).text(),
+        let temp = $("div.content > article")   // select result 
+            .map((_, article) => ({       // map to an list of objects
+                // the title of the news is in an a tag inside the article tag
+                title: '[OEP] ' + $("a", article).text(), 
+                // the upload date of the news is in a div tag inside the article tag
+                // convert it to a unix timestamp
                 timeStamp: moment($("div.submitted", article).text().slice(4, 22), "DD/MM/YYYY - HH:mm").unix(),
+                // the link to the news is in an a tag inside the article tag
                 link: 'https://oep.uit.edu.vn' + $("a", article).attr("href")
             }));
 
@@ -20,6 +24,8 @@ export default class WebFetchService {
         for (let i = 0; i < 10; i++) {
             OEPNews = [...OEPNews, temp[i]];
         }
+
+        // return an array which contains news objects
         return OEPNews;
     }
 

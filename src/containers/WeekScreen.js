@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Button } from 'react-native';
-import { Agenda } from 'react-native-calendars';
+import { Agenda, LocaleConfig } from 'react-native-calendars';
 import EventCard from '../components/EventCard';
 import moment from 'moment';
 import { connect } from "react-redux";
@@ -11,6 +11,14 @@ import NotifService from '../components/NotifService'
 import BackgroundFetch from "react-native-background-fetch";
 import WebFetchService from '../components/WebFetchService'
 
+LocaleConfig.locales['vi'] = {
+    monthNames: ['Tháng một','Tháng hai','Tháng ba','Tháng tư','Tháng năm','Tháng sáu','Tháng bảy','Tháng tám','Tháng chín','Tháng mười','Tháng mười một','Tháng mười hai'],
+    monthNamesShort: ['1','2','3','4','5','6','7.','8','9','10','11','12'],
+    dayNames: ['Chủ nhật','Thứ hai','Thứ ba','Thứ tư','Thứ năm','Thứ sáu','Thứ bảy'],
+    dayNamesShort: ['Chủ nhật','Hai','Ba','Tư','Năm','Sáu','Bảy']
+  };
+
+  LocaleConfig.defaultLocale = 'vi';
 var eventColorListLoaded = false;
 
 var DBHelperService = new DBHelper();
@@ -19,24 +27,28 @@ var webFetchService = new WebFetchService();
 
 class WeekScreen extends Component {
 
-    static navigationOptions = ({ navigation }) => {
-        const { params = {} } = navigation.state;
-        return {
-            headerTitle: <View style={{ flex: 7, alignItems: 'center' }}>
-                <Text style={styles.screenTitle}></Text>
-            </View>,
-            headerRight: (
-                <TouchableOpacity
-                    style={{ flex: 3, alignItems: 'center', justifyContent: 'center', padding: 10 }}
-                    onPress={() => {
-                        params._showCurrentDateEvent();
-                    }}
-                >
-                    <Icon name="md-calendar" size={40} />
-                </TouchableOpacity>
-            ),
-        };
-    };
+    // static navigationOptions = ({ navigation }) => {
+    //     const { params = {} } = navigation.state;
+    //     return {
+    //         headerTitle: <View style={{ flex: 7, alignItems: 'center' }}>
+    //             <Text style={styles.screenTitle}></Text>
+    //         </View>,
+    //         headerRight: (
+    //             <TouchableOpacity
+    //                 style={{ flex: 3, alignItems: 'center', justifyContent: 'center', padding: 10 }}
+    //                 onPress={() => {
+    //                     params._showCurrentDateEvent();
+    //                 }}
+    //             >
+    //                 <Icon name="md-calendar" size={40} />
+    //             </TouchableOpacity>
+    //         ),
+    //     };
+    // };
+
+    static navigationOptions = {
+        header: null
+    }
 
     constructor(props) {
         super(props);
@@ -55,17 +67,23 @@ class WeekScreen extends Component {
             this.refreshLatestEventNotifyId();
             eventColorListLoaded = true;
         }
+        this.renderItem = this.renderItem.bind(this);
+        this.renderEmptyDate = this.renderEmptyDate.bind(this);
+        this.renderEmptyData = this.renderEmptyData.bind(this);
+        this.rowHasChanged = this.rowHasChanged.bind(this);
+        this.getAllEventsIn2Months = this.getAllEventsIn2Months.bind(this);
+        this.navigateToAddNewEvent = this.navigateToAddNewEvent.bind(this);
     }
 
     componentDidMount() {
-        this.props.navigation.setParams({
-            _showCurrentDateEvent: this.showCurrentDateEvent,
-        })
+        // this.props.navigation.setParams({
+        //     _showCurrentDateEvent: this.showCurrentDateEvent,
+        // })
 
         BackgroundFetch.configure({
             minimumFetchInterval: 15, // <-- minutes (15 is minimum allowed)
-            stopOnTerminate: false,   // <-- Android-only,
-            startOnBoot: true         // <-- Android-only
+            stopOnTerminate: false,
+            startOnBoot: true
         }, async () => {
             console.log("Background task")
             let OEPNews = await webFetchService.fetchOEP();
@@ -243,20 +261,36 @@ class WeekScreen extends Component {
         });
     }
 
+    navigateToAddNewEvent() {
+        let action = {
+            eventId: -1,
+            eventColor: '#009ae4',
+            startTime: this.state.selectedDay,
+            endTime: this.state.selectedDay,
+            eventTitle: '',
+            eventDescription: '',
+            notifyTime: [],
+        };
+        this.props.dispatch({ type: 'UPDATE_CURRENT', event: action });
+        this.props.navigation.navigate('EventEdit', {
+            screenTitle: 'Thêm mới',
+            // selectedDay: this.state.selectedDay
+        });
+    }
+
     render() {
 
         return (
             <View style={styles.container}>
-                <Button title="test" onPress={() => { this.test(); }}></Button>
                 <Agenda
                     items={this.props.monthEventList}
-                    loadItemsForMonth={(month) => { this.getAllEventsIn2Months(month); }}
-                    renderItem={this.renderItem.bind(this)}
-                    onDayPress={(day) => { this.setState({ selectedDay: day.timestamp / 1000 }) }}
-                    renderEmptyDate={this.renderEmptyDate.bind(this)}
-                    renderEmptyData={this.renderEmptyData.bind(this)}
-                    rowHasChanged={this.rowHasChanged.bind(this)}
-                    selected={moment(this.state.selectedDay * 1000).format('YYYY-MM-DD')}
+                    loadItemsForMonth={(month) => this.getAllEventsIn2Months(month)}
+                    renderItem={this.renderItem}
+                    onDayPress={(day) => this.setState({ selectedDay: day.timestamp / 1000 })}
+                    renderEmptyDate={this.renderEmptyDate}
+                    renderEmptyData={this.renderEmptyData}
+                    rowHasChanged={this.rowHasChanged}
+                    // selected={moment(this.state.selectedDay * 1000).format('YYYY-MM-DD')}
                     firstDay={1}
                     markingType={'multi-dot'}
                     // refreshing={true}
@@ -265,22 +299,7 @@ class WeekScreen extends Component {
                 />
                 <ActionButton
                     buttonColor="rgba(231,76,60,1)"
-                    onPress={() => {
-                        let action = {
-                            eventId: -1,
-                            eventColor: '#009ae4',
-                            startTime: this.state.selectedDay,
-                            endTime: this.state.selectedDay,
-                            eventTitle: '',
-                            eventDescription: '',
-                            notifyTime: [],
-                        };
-                        this.props.dispatch({ type: 'UPDATE_CURRENT', event: action });
-                        this.props.navigation.navigate('EventEdit', {
-                            screenTitle: 'Thêm mới',
-                            // selectedDay: this.state.selectedDay
-                        });
-                    }}
+                    onPress={this.navigateToAddNewEvent}
                 >
                 </ActionButton>
             </View>

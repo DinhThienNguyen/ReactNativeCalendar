@@ -135,12 +135,14 @@ class EventDetailsScreen extends Component {
         })
         return (
             <View style={{ flex: 1 }}>
-                <View style={{ flex: 3, justifyContent: 'space-between', backgroundColor: this.props.eventColor }}>
-                    <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#ffffff', paddingLeft: 20, paddingTop: 15 }}></Text>
-                    <View style={{ flexDirection: 'row', paddingLeft: 20, paddingBottom: 10 }}>
-                        <Text style={{ fontFamily: 'sans-serif', fontSize: 24, fontWeight: 'bold', color: '#ffffff' }}>
-                            {this.props.eventTitle === '' ? "Không có tiêu đề" : this.props.eventTitle}
-                        </Text>
+                <View style={{ flex: 3, justifyContent: 'flex-end', backgroundColor: this.props.eventColor }}>
+
+                    <View style={{flexDirection: 'row', paddingLeft: 20, paddingBottom: 10 }}>
+                        <ScrollView>
+                            <Text style={{ fontFamily: 'sans-serif', fontSize: 24, fontWeight: 'bold', color: '#ffffff' }}>
+                                {this.props.eventTitle === '' ? "Không có tiêu đề" : this.props.eventTitle}
+                            </Text>
+                        </ScrollView>
                     </View>
                 </View>
                 <View style={styles.detail}>
@@ -149,7 +151,7 @@ class EventDetailsScreen extends Component {
                             <Icon name="md-time" size={25} color='#212121' />
                         </View>
                         <View style={{ flex: 9, flexDirection: 'row', alignItems: 'center' }}>
-                            <Text style={styles.title}>Time</Text>
+                            <Text style={styles.title}>Thời gian</Text>
                         </View>
                     </View>
 
@@ -170,7 +172,7 @@ class EventDetailsScreen extends Component {
                             <Icon name="md-notifications" size={25} color='#212121' />
                         </View>
                         <View style={{ flex: 9 }}>
-                            <Text style={styles.title}>Notification</Text>
+                            <Text style={styles.title}>Thông báo</Text>
                         </View>
                     </View>
 
@@ -185,13 +187,13 @@ class EventDetailsScreen extends Component {
                             <Icon name="md-list" size={25} color='#212121' />
                         </View>
                         <View style={{ flex: 9 }}>
-                            <Text style={styles.title}>Description</Text>
+                            <Text style={styles.title}>Mô tả chi tiết</Text>
                         </View>
                     </View>
 
                     <ScrollView>
                         <Text onPress={() => {
-                            if(this.props.eventDescription.slice(0, 5) === 'https'){
+                            if (this.props.eventDescription.slice(0, 5) === 'https') {
                                 Linking.openURL(this.props.eventDescription);
                             }
                         }} style={styles.detailText}>
